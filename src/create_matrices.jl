@@ -3,15 +3,15 @@
 
 Defines the Schwartz Smith parameters that will be estimated.
 """
-mutable struct SSParams
-    k::Float64
-    σ_χ::Float64
-    λ_χ::Float64
-    μ_ξ::Float64
-    σ_ξ::Float64
-    μ_ξ_star::Float64
-    ρ_ξχ::Float64
-    s::Vector{Float64}
+mutable struct SSParams{T}
+    k::T
+    σ_χ::T
+    λ_χ::T
+    μ_ξ::T
+    σ_ξ::T
+    μ_ξ_star::T
+    ρ_ξχ::T
+    s::Vector{T}
 end
 
 function A(T, p::SSParams)
@@ -26,7 +26,7 @@ function V(p::SSParams)
     return cov_matrix
 end
 
-function W(p::SSParams, delta_t::Int64 = 1)
+function W(p::SSParams, delta_t::Int = 1)
     ρ = (1 - exp(-p.k * delta_t)) * (p.ρ_ξχ * p.σ_χ * p.σ_ξ)/(p.k)
     cov_matrix = [
             (1 - exp(-2 * p.k * delta_t)) * (p.σ_χ^2)/(2 * p.k)     ρ
@@ -37,14 +37,14 @@ function W(p::SSParams, delta_t::Int64 = 1)
     return cov_matrix
 end
 
-function G(p::SSParams, delta_t::Int64 = 1)
+function G(p::SSParams, delta_t::Int = 1)
     return [
             exp(-p.k * delta_t)     0
             0                       1
     ]
 end
 
-function c(p::SSParams, delta_t::Int64 = 1)
+function c(p::SSParams, delta_t::Int = 1)
     return [0; p.μ_ξ * delta_t]
 end
 
