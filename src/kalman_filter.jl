@@ -1,8 +1,7 @@
 """
 Definition of the Kalman Filter recursion.
 """
-
-function kalman_filter(ln_F::Matrix{Typ}, T::Matrix, p::SSParams, s::Vector{Typ}) where Typ
+function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, s::Vector{Typ}) where Typ
 
     n, prods = size(ln_F)
 
@@ -22,7 +21,7 @@ function kalman_filter(ln_F::Matrix{Typ}, T::Matrix, p::SSParams, s::Vector{Typ}
 
     RQR = W(p)
     @assert isposdef(RQR)
-    H = V(s)
+    H = V(p)
     @assert isposdef(H)
 
     # Kalman filter recursion equations

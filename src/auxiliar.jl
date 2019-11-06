@@ -1,8 +1,9 @@
 """
-Definition of ensure_pos_sym functions to guarantee that some of the matrices
-are positive semi-definite.
-"""
+    ensure_pos_sym!(M::AbstractArray{T}, t::Int; ϵ::T = T(1e-8)) where T
+    ensure_pos_sym!(M::AbstractArray{T}; ϵ::T = T(1e-8)) where T
 
+Force matrix to be positive definite. 
+"""
 function ensure_pos_sym!(M::AbstractArray{T}, t::Int; ϵ::T = T(1e-8)) where T
     @inbounds for j in axes(M, 2), i in 1:j
         if i == j

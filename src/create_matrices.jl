@@ -1,7 +1,7 @@
 """
-The struct SSParams defines the Schwartz Smith parameters that will be estimated.
-The next functions defines the elements and matrices that compose the observation and
-state equations.
+    SSParams
+
+Defines the Schwartz Smith parameters that will be estimated.
 """
 mutable struct SSParams
     k::Float64
@@ -11,6 +11,7 @@ mutable struct SSParams
     σ_ξ::Float64
     μ_ξ_star::Float64
     ρ_ξχ::Float64
+    s::Vector{Float64}
 end
 
 function A(T, p::SSParams)
@@ -19,13 +20,13 @@ function A(T, p::SSParams)
     return a + b
 end
 
-function V(s::Vector{Float64})
-    cov_matrix = Diagonal(s.^2)
+function V(p::SSParams)
+    cov_matrix = Diagonal(p.s.^2)
     ensure_pos_sym!(cov_matrix)
     return cov_matrix
 end
 
-function W(p::SSParams, delta_t = 1)
+function W(p::SSParams, delta_t::Int64 = 1)
     ρ = (1 - exp(-p.k * delta_t)) * (p.ρ_ξχ * p.σ_χ * p.σ_ξ)/(p.k)
     cov_matrix = [
             (1 - exp(-2 * p.k * delta_t)) * (p.σ_χ^2)/(2 * p.k)     ρ
@@ -36,19 +37,19 @@ function W(p::SSParams, delta_t = 1)
     return cov_matrix
 end
 
-function G(p::SSParams, delta_t = 1)
+function G(p::SSParams, delta_t::Int64 = 1)
     return [
             exp(-p.k * delta_t)     0
             0                       1
     ]
 end
 
-function c(p::SSParams, delta_t = 1)
+function c(p::SSParams, delta_t::Int64 = 1)
     return [0; p.μ_ξ * delta_t]
 end
 
 function d(T::Vector{Typ}, p::SSParams) where Typ
-    A_vec = Vector{Float64}(undef,length(T))
+    A_vec = Vector{Typ}(undef,length(T))
     for (i, t) in enumerate(T)
         A_vec[i] = A(t, p)
     end
@@ -57,7 +58,7 @@ function d(T::Vector{Typ}, p::SSParams) where Typ
 end
 
 function F(T::Vector{Typ}, p::SSParams) where Typ
-    F_matrix = Matrix{Float64}(undef, length(T), 2)
+    F_matrix = Matrix{Typ}(undef, length(T), 2)
     for (i, t) in enumerate(T)
         e = exp(-p.k * t)
 
