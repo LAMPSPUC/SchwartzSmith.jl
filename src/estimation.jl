@@ -6,8 +6,7 @@ Obtains the log likelihood value given a set of parameters.
 function calc_likelihood(v_kf::Matrix{Typ}, F_kf::Array{Typ, 3}, n::Int, prods::Int) where Typ
     log_likelihood = -n * prods * log(2*pi)/2
     @inbounds for t in 1:n
-        det_F = det(F_kf[:, :, t])
-        log_likelihood -= 0.5 * (log(det_F) + v_kf[t, :]' * inv(F_kf[:, :, t]) * v_kf[t, :])
+        log_likelihood -= 0.5 * (logdet(F_kf[:, :, t]) + v_kf[t, :]' * inv(F_kf[:, :, t]) * v_kf[t, :])
     end
     return -log_likelihood
 end

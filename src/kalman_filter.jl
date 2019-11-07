@@ -1,5 +1,5 @@
 """
-    kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams) where Typ
+    kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}) where Typ
 
 Definition of the Kalman Filter recursion.
 """

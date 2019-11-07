@@ -2,8 +2,6 @@ module SchwartzSmith
 
 using Optim
 using LinearAlgebra
-using DataFrames
-using Plots
 
 export schwartzsmith, estimated_prices_states
 
@@ -23,6 +21,8 @@ function schwartzsmith(ln_F::Matrix{Float64}, T::Matrix{Float64})
     n, prods = size(ln_F)
     seed = -0.3*rand(7 + maximum(prods))
     optseed = optimize(psi -> compute_likelihood(ln_F, T, psi), seed, LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
+
+    println(optseed)
 
     opt_param =optseed.minimizer
 
@@ -44,14 +44,13 @@ function schwartzsmith(ln_F::Matrix{Float64}, T::Matrix{Float64})
 end
 
 """
-    estimated_prices(p::SSParams, T::Matrix{Float}, ln_F::Matrix{Float64})
+    estimated_prices_states(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{Typ})
 
 Returns the prices and state variables estimated by the model.
 """
 function estimated_prices_states(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{Typ}) where Typ
     n, prods = size(T)
     y = Array{Typ, 2}(undef, n, prods)
-    x = Array{Typ, 2}(undef, n + 1, 2)
 
     v_kf, F_kf, x = kalman_filter(ln_F, T, p)
 
