@@ -8,6 +8,7 @@ export schwartzsmith, estimated_prices_states
 include("create_matrices.jl")
 include("auxiliar.jl")
 include("kalman_filter.jl")
+include("sqrt_kalman_filter.jl")
 include("estimation.jl")
 
 """
