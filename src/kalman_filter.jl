@@ -1,7 +1,9 @@
 """
+    kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}) where Typ
+
 Definition of the Kalman Filter recursion.
 """
-function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams) where Typ
+function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}) where Typ
 
     n, prods = size(ln_F)
 
