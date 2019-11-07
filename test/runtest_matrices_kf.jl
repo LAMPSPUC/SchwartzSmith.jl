@@ -27,7 +27,8 @@ F_test = SchwartzSmith.F(T[1,:],p)
 V_test = SchwartzSmith.V(p)
 
 # Kalman filter
-F    = [collect(1:1:5) collect(6:1:10)]
+F    = [collect(1:1:5) collect(6:1:10)]'
 ln_F = log.(F)
-T    = [collect(10:10:50) collect(10:10:50)]
-v_kf_test, F_kf_test, att_kf_test = SchwartzSmith.kalman_filter(ln_F, T, p, s)
+T = [collect(10:10:50) collect(10:10:50)]'
+T = T./2
+v_kf_test, F_kf_test, att_kf_test = SchwartzSmith.kalman_filter(ln_F, T, p)
