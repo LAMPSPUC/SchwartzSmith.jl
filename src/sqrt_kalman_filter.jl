@@ -1,9 +1,9 @@
 """
-    sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams) where Typ
+    sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delta_t::Int) where Typ
 
 Square Root Kalman Filter.
 """
-function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams) where Typ
+function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delta_t::Int) where Typ
 
     n, prods = size(ln_F)
 
@@ -28,35 +28,32 @@ function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams) wher
     a_kf[1, :]    = zeros(2, 1)
     sqrtP_kf[:, :, 1] = 1e1 .* Matrix(I, 2, 2)
 
-    sqrt_Q = cholesky(W(p)).L
+    sqrt_Q = cholesky(W(p, delta_t)).L
     sqrt_H = cholesky(V(p)).L
 
-    a[1, :]           = zeros(2, 1)
-    sqrtP[:, :, 1]    = 1e1 .* Matrix(I, 2, 2)
-   
     # Pre-allocating for performance
     zeros_pr = zeros(prods, 2)
     zeros_mp = zeros(2, prods)
     range1   = (prods + 1):(prods + 2)
     range2   = 1:prods
     sqrtH_zeros_pr  = [sqrt_H zeros_pr]
-    zeros_mp_RsqrtQ = [zeros_mp R*sqrt_Q]
-   
+    zeros_mp_RsqrtQ = [zeros_mp sqrt_Q]
+
     # Square-root Kalman filter
     for t = 1:n
         Z_kf = F(T[t, :], p)
-        T_kf = G(p)
+        T_kf = G(p, delta_t)
         d_kf = d(T[t, :], p)
-        c_kf = c(p)
+        c_kf = c(p, delta_t)
 
-        v_kf[t, :] = ln_F[t, :] - Z_kf*a[t, :] - d_kf
+        v_kf[t, :] = ln_F[t, :] - Z_kf * a_kf[t, :] - d_kf
         # Manipulation of auxiliary matrices
-        U         = [Z_kf*sqrtP_kf[:, :, t] sqrtH_zeros_pr;
-                     T_kf*sqrtP_kf[:, :, t] zeros_mp_RsqrtQ]
-        G         = qr(U').Q
-        Ustar     = U*G
+        U         = [Z_kf * sqrtP_kf[:, :, t] sqrtH_zeros_pr;
+                     T_kf * sqrtP_kf[:, :, t] zeros_mp_RsqrtQ]
+        G_kf      = qr(Matrix(U')).Q
+        Ustar     = U*G_kf
         U2star[:, :, t] = Ustar[range1, range2]
-        sqrtF[:, :, t]  = Ustar[range2, range2]
+        sqrtF_kf[:, :, t]  = Ustar[range2, range2]
 
         # Kalman gain and predictive state update
         K_kf[:, :, t]       = U2star[:, :, t]*inv(sqrtF_kf[:, :, t])
@@ -66,7 +63,7 @@ function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams) wher
 
     F_kf = gram_in_time(sqrtF_kf)
 
-    return v_kf, F_kf, a_kf
+    return v_kf, F_kf
 end
 
 function gram_in_time(mat::Array{T, 3}) where T

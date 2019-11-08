@@ -12,9 +12,10 @@ include("kalman_filter.jl")
 include("sqrt_kalman_filter.jl")
 include("estimation.jl")
 include("simulation.jl")
+include("forecast.jl")
 
 """
-    schwartzsmith(ln_F::Matrix{Float64}, T::Matrix{Float64})
+    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seed::Vector{Typ} = -0.2*rand(Typ, 7 + size(ln_F, 2))) where Typ
 
 Estimation of the Schwartz Smith model. Returns the estimated parameters.
 """
@@ -42,21 +43,21 @@ function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seed
 end
 
 """
-    estimated_prices_states(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{Typ})
+    estimated_prices_states(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
 
-Returns the prices and state variables estimated by the model.
+Returns the prices and the kalman filter struct estimated by the model.
 """
 function estimated_prices_states(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
     n, prods = size(T)
     y = Array{Typ, 2}(undef, n, prods)
 
-    v_kf, F_kf, x = kalman_filter(ln_F, T, p, delta_t)
+    f = kalman_filter(ln_F, T, p, delta_t)
 
     for t in 1:n
-        y[t, :] = d(T[t, :], p) + F(T[t, :], p) * x[t, :]
+        y[t, :] = d(T[t, :], p) + F(T[t, :], p) * f.att_kf[t, :]
     end
 
-    return y, x
+    return y, f
 end
 
 

@@ -1,5 +1,5 @@
 """
-    kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}) where Typ
+    kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, delta_t::Int) where Typ
 
 Definition of the Kalman Filter recursion.
 """
@@ -48,5 +48,16 @@ function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, delt
         @assert isposdef(P_kf[:, :, t])
     end
 
-    return v_kf, F_kf, att_kf
+    f = Filter(a_kf, P_kf, att_kf, Ptt_kf, v_kf, F_kf)
+
+    return f
+end
+
+mutable struct Filter{T}
+    a_kf::Matrix{T}
+    P_kf::Array{T, 3}
+    att_kf::Matrix{T}
+    Ptt_kf::Array{T, 3}
+    v_kf::Matrix{T}
+    F_kf::Array{T, 3}
 end
