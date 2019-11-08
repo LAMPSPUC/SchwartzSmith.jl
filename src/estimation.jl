@@ -17,7 +17,7 @@ end
 Parameters definition and Kalman filter execution to calculate the log likelihood. Function that will be optmized to obtain
 the best set of parameters.
 """
-function compute_likelihood(ln_F::Matrix{Typ}, T::Matrix{Typ}, psi::Vector{Typ}) where Typ
+function compute_likelihood(ln_F::Matrix{Typ}, T::Matrix{Typ}, psi::Vector{Typ}, delta_t::Int) where Typ
 
     k = exp(psi[1])
     σ_χ = exp(psi[2])
@@ -33,7 +33,7 @@ function compute_likelihood(ln_F::Matrix{Typ}, T::Matrix{Typ}, psi::Vector{Typ})
     n, prods = size(ln_F)
     @assert length(s) == prods
 
-    v_kf, F_kf, att_kf = kalman_filter(ln_F, T, p)
+    v_kf, F_kf, att_kf = kalman_filter(ln_F, T, p, delta_t)
 
     return calc_likelihood(v_kf, F_kf, n, prods)
 end

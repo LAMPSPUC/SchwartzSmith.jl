@@ -28,7 +28,7 @@ function get_prices_T(path::String)
 end
 
 prices, T = get_prices_T(path);
-n, prods = 200, 2
+n, prods = 230, 2
 
 ln_F = log.(prices[1:n, 1:prods])
 T_M = Matrix{Float64}(undef, n, prods)
@@ -37,7 +37,7 @@ for i in 1:n, j in 1:prods
     T_M[i, j] = mean(T[:, j])
 end
 
-p, att_kf, seed = schwartzsmith(ln_F, T_M)
+p, seed = schwartzsmith(ln_F, T_M)
 
 seed = [ -0.06180695966037159
  -0.17609367052333552
@@ -50,3 +50,42 @@ seed = [ -0.06180695966037159
  -0.021270250220516696]
 
 y, x = estimated_prices_states(p, T_M, ln_F)
+
+N = 100
+S = 200
+T_sim = T_M[1:N, :]
+
+x_sim, y_sim = simulate(p, x, T_sim, N, S)
+
+using Plots
+
+product = 2
+plot(ln_F[:, product], label = "")
+plot!(y[:, product], label = "")
+y_init = ones(n, S).*NaN
+
+y_simul = vcat(y_init, y_sim[:, product, :])
+
+plot!(y_simul[:, :], label = "")
+
+# forecast
+
+y_forec = mean(y_simul, dims = 2)
+y_forec[231:330]
+
+plot(prices[1:(n+N), product], label = "")
+plot!(exp.(y_forec), label = "")
+
+forec = mean(y_sim, dims = 3)
+
+forec[:, 2, :]
+
+y_forec, x_forec = forecast(y_sim, x_sim)
+
+plot(x_sim[:,1,1])
+plot!(x_sim[:,2,1])
+
+spot = exp.(x_forec[:, 1, 1] + x_forec[:, 2, 1])
+
+plot(spot)
+plot!(exp.(y_forec[:,1,1]))

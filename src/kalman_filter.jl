@@ -3,7 +3,7 @@
 
 Definition of the Kalman Filter recursion.
 """
-function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}) where Typ
+function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, delta_t::Int) where Typ
 
     n, prods = size(ln_F)
 
@@ -21,7 +21,7 @@ function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}) wher
     a_kf[1, :]    = zeros(2, 1)
     P_kf[:, :, 1] = 1e1 .* Matrix(I, 2, 2)
 
-    RQR = W(p)
+    RQR = W(p, delta_t)
     @assert isposdef(RQR)
     H = V(p)
     @assert isposdef(H)
@@ -29,9 +29,9 @@ function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}) wher
     # Kalman filter recursion equations
     for t = 1:n
         Z_kf = F(T[t, :], p)
-        T_kf = G(p)
+        T_kf = G(p, delta_t)
         d_kf = d(T[t, :], p)
-        c_kf = c(p)
+        c_kf = c(p, delta_t)
         ZP   = Z_kf * P_kf[:, :, t]
         v_kf[t, :]      = ln_F[t, :] - Z_kf * a_kf[t, :] - d_kf
         F_kf[:, :, t]   = ZP * Z_kf' + H
