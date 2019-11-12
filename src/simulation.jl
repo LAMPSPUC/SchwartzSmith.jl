@@ -3,9 +3,19 @@
 
 Simulate S future scenarios up to N steps ahead.
 """
-function simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, N::Int, S::Int; delta_t::Int = 1)
+function simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, N::Int, S::Int; delta_t::Int = 1, average_T::String = "true")
     n = size(att_kf, 1)
     prods = size(T, 2)
+
+    # Calculation of average time to maturity
+    if average_T == "true"
+        T_M = Matrix{Float64}(undef, n, prods)
+
+        for i in 1:n, j in 1:prods
+            T_M[i, j] = mean(T[:, j])
+        end
+        T = T_M
+    end
 
     # Covariance matrices
     Q = W(p, delta_t)

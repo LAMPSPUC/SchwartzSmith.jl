@@ -3,8 +3,18 @@
 
 Returns the mean square error forecasts N steps ahead.
 """
-function forecast(f::Filter{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, N::Int; delta_t = 1) where Typ
+function forecast(f::Filter{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, N::Int; delta_t = 1, average_T::String = "true") where Typ
     n, prods = size(T)
+
+    # Calculation of average time to maturity
+    if average_T == "true"
+        T_M = Matrix{Float64}(undef, n, prods)
+
+        for i in 1:n, j in 1:prods
+            T_M[i, j] = mean(T[:, j])
+        end
+        T = T_M
+    end
 
     # Initial values
     a0 = f.a_kf[end, :]
