@@ -27,3 +27,55 @@ function ensure_pos_sym!(M::AbstractArray{T}; ϵ::T = T(1e-8)) where T
     end
     return
 end
+
+"""
+    calc_seed(ln_F::Matrix{Typ}, T::Matrix{Typ}, n_seed::Int64, delta_t_s::Int64) where Typ
+
+Random seed calculation for a time to maturity matrix.
+"""
+function calc_seed(ln_F::Matrix{Typ}, T::Matrix{Typ}, n_seed::Int64, delta_t_s::Int64) where Typ
+
+    # Test with different seeds
+    seed_l = -0.2*rand(Typ, 7 + size(ln_F, 2))
+    min_l = compute_likelihood(ln_F, T, seed_l, delta_t_s)
+    for i = 1:n_seed
+        seed = -0.2*rand(Typ, 7 + size(ln_F, 2))
+        calc_l = compute_likelihood(ln_F, T, seed, delta_t_s)
+
+        if calc_l < min_l
+            min_l = calc_l
+            seed_l = seed
+        end
+    end
+    return seed = seed_l
+end
+
+"""
+    calc_seed(ln_F::Matrix{Typ}, T::Vector{Typ}, n_seed::Int64, delta_t_s::Int64) where Typ
+
+Random seed calculation for a time to maturity vector.
+"""
+function calc_seed(ln_F::Matrix{Typ}, T_V::Vector{Typ}, n_seed::Int64, delta_t_s::Int64) where Typ
+
+    n, prods = size(ln_F)
+    T = Matrix{Typ}(undef, n, prods)
+
+    # Representation of the time to maturity matrix
+    for i in 1:n, j in 1:prods
+        T[i, j] = T_V[j]
+    end
+
+    # Test with different seeds
+    seed_l = -0.2*rand(Typ, 7 + size(ln_F, 2))
+    min_l = compute_likelihood(ln_F, T, seed_l, delta_t_s)
+    for i = 1:n_seed
+        seed = -0.2*rand(Typ, 7 + size(ln_F, 2))
+        calc_l = compute_likelihood(ln_F, T, seed, delta_t_s)
+
+        if calc_l < min_l
+            min_l = calc_l
+            seed_l = seed
+        end
+    end
+    return seed = seed_l
+end

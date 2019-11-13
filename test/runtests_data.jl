@@ -6,6 +6,7 @@ using SchwartzSmith
 
 using DelimitedFiles
 using Plots
+using Statistics
 
 # Loading the data
 path = "C:\\Users\\mdietze\\Dropbox\\PUC\\Eneva\\Schwartz-Smith\\SchwartzSmith.jl\\test\\data.csv"
@@ -35,10 +36,16 @@ n, prods = size(prices)
 ln_F = log.(prices[1:n, 1:prods])[1:800, :]
 T = T_all[1:800, :]
 
-# Estimation of the Schwartz Smith model with average time to maturity and random seed
-p, seed, optseed = schwartzsmith(ln_F, T)
+T_A = [mean(T[:, 1]); mean(T[:,2])]
 
-# Estimation of the Schwartz Smith model with original time to maturity and specific seed
+# Schwartz Smith model with random seed
+p, seed, optseed = schwartzsmith(ln_F, T_A)
+y, f = estimated_prices_states(p, T_A, ln_F)
+
+p, seed, optseed = schwartzsmith(ln_F, T)
+y, f = estimated_prices_states(p, T, ln_F)
+
+# Schwartz Smith model with a specific seed
 seed_t = [-0.12484220610793516
 -0.13603638507367366
 -0.1634576131026249
@@ -49,18 +56,19 @@ seed_t = [-0.12484220610793516
 -0.13360827922373616
 -0.17940876802089156];
 
-p, seed, optseed = schwartzsmith(ln_F, T; seed = seed_t, average_T = "false")
-
-# Forward prices estimated by the model and struct with Kalman Filter results
+p, seed, optseed = schwartzsmith(ln_F, T; seed = seed_t)
 y, f = estimated_prices_states(p, T, ln_F)
+
+p, seed, optseed = schwartzsmith(ln_F, T_A; seed = seed_t)
+y, f = estimated_prices_states(p, T_A, ln_F)
 
 # Scenarios simulation
 N = 100
 S = 200
 
-T_sim = T_all[801:n, :]
+T_sim = T_all[801:900, :]
 
-x_sim, y_sim = simulate(p, f.att_kf, T_sim, N, S)
+x_sim, y_sim = simulate(p, f.att_kf, T_A, N, S)
 
 # N steps ahead forecasting
-for_N = forecast(f, T_sim, p, 100)
+for_N = forecast(f, T_A, p, 100)
