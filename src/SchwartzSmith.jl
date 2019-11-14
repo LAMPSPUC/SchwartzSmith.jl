@@ -24,6 +24,7 @@ function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seed
     # Parameters estimation
     n, prods = size(ln_F)
 
+    println("------------------ Optimal Seed ------------------")
     optseed = optimize(psi -> compute_likelihood(ln_F, T, psi, delta_t), seed, LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
 
     opt_param = optseed.minimizer

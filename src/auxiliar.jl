@@ -35,19 +35,25 @@ Random seed calculation for a time to maturity matrix.
 """
 function calc_seed(ln_F::Matrix{Typ}, T::Matrix{Typ}, n_seed::Int64, delta_t_s::Int64) where Typ
 
-    # Test with different seeds
-    seed_l = -0.2*rand(Typ, 7 + size(ln_F, 2))
-    min_l = compute_likelihood(ln_F, T, seed_l, delta_t_s)
-    for i = 1:n_seed
-        seed = -0.2*rand(Typ, 7 + size(ln_F, 2))
-        calc_l = compute_likelihood(ln_F, T, seed, delta_t_s)
+    n, prods = size(ln_F)
 
-        if calc_l < min_l
-            min_l = calc_l
-            seed_l = seed
+    println("------------------ Seed 1 ------------------")
+    seed = -0.2*rand(Typ, 7 + size(ln_F, 2))
+    optseed = optimize(psi -> compute_likelihood(ln_F, T, psi, delta_t_s), seed, LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
+
+    min_seed = seed;
+    min_opt = optseed.minimum;
+    for i = 1:(n_seed - 1)
+        println("------------------ Seed ", i + 1, " ------------------")
+        seed = -0.2*rand(Typ, 7 + size(ln_F, 2))
+        optseed = optimize(psi -> compute_likelihood(ln_F, T, psi, delta_t_s), seed, LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
+
+        if optseed.minimum < min_opt
+            min_seed = seed
         end
     end
-    return seed = seed_l
+
+    return min_seed
 end
 
 """
@@ -65,17 +71,21 @@ function calc_seed(ln_F::Matrix{Typ}, T_V::Vector{Typ}, n_seed::Int64, delta_t_s
         T[i, j] = T_V[j]
     end
 
-    # Test with different seeds
-    seed_l = -0.2*rand(Typ, 7 + size(ln_F, 2))
-    min_l = compute_likelihood(ln_F, T, seed_l, delta_t_s)
-    for i = 1:n_seed
-        seed = -0.2*rand(Typ, 7 + size(ln_F, 2))
-        calc_l = compute_likelihood(ln_F, T, seed, delta_t_s)
+    println("------------------ Seed 1 ------------------")
+    seed = -0.2*rand(Typ, 7 + size(ln_F, 2))
+    optseed = optimize(psi -> compute_likelihood(ln_F, T, psi, delta_t_s), seed, LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
 
-        if calc_l < min_l
-            min_l = calc_l
-            seed_l = seed
+    min_seed = seed;
+    min_opt = optseed.minimum;
+    for i = 1:(n_seed - 1)
+        println("------------------ Seed ", i + 1, " ------------------")
+        seed = -0.2*rand(Typ, 7 + size(ln_F, 2))
+        optseed = optimize(psi -> compute_likelihood(ln_F, T, psi, delta_t_s), seed, LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
+
+        if optseed.minimum < min_opt
+            min_seed = seed
         end
     end
-    return seed = seed_l
+
+    return min_seed
 end
