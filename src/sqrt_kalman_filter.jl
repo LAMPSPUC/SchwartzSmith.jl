@@ -28,6 +28,8 @@ function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delt
     a_kf[1, :]    = zeros(2, 1)
     sqrtP_kf[:, :, 1] = 1e1 .* Matrix(I, 2, 2)
 
+    ensure_pos_sym!(W(p, delta_t))
+
     sqrt_Q = cholesky(W(p, delta_t)).L
     sqrt_H = cholesky(V(p)).L
 
@@ -62,6 +64,7 @@ function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delt
     end
 
     F_kf = gram_in_time(sqrtF_kf)
+    ensure_pos_sym!(F_kf)
 
     return v_kf, F_kf
 end

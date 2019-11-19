@@ -41,25 +41,17 @@ T_A = [mean(T[:, 1]); mean(T[:,2])]
 # Schwartz Smith model with random seed
 p, seed, optseed = schwartzsmith(ln_F, T_A)
 y, f = estimated_prices_states(p, T_A, ln_F)
+seed_A = seed;
 
 p, seed, optseed = schwartzsmith(ln_F, T)
 y, f = estimated_prices_states(p, T, ln_F)
+seed_T = seed;
 
 # Schwartz Smith model with a specific seed
-seed_t = [-0.12484220610793516
--0.13603638507367366
--0.1634576131026249
--0.05535350189974833
--0.1998703761043637
--0.1738276551834587
--0.156635465891093
--0.13360827922373616
--0.17940876802089156];
-
-p, seed, optseed = schwartzsmith(ln_F, T; seed = seed_t)
+p, seed, optseed = schwartzsmith(ln_F, T; seeds = seed_T)
 y, f = estimated_prices_states(p, T, ln_F)
 
-p, seed, optseed = schwartzsmith(ln_F, T_A; seed = seed_t)
+p, seed, optseed = schwartzsmith(ln_F, T_A; seeds = seed_A)
 y, f = estimated_prices_states(p, T_A, ln_F)
 
 # Scenarios simulation
