@@ -1,7 +1,7 @@
 """
     simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, N::Int, S::Int; delta_t::Int = 1)
 
-Simulate S future scenarios up to N steps ahead.
+Simulate S future scenarios up to N steps ahead. Matrix of time to maturity as input.
 """
 function simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, N::Int, S::Int; delta_t::Int = 1)
     n = size(att_kf, 1)
@@ -35,4 +35,21 @@ function simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, N::I
     end
 
     return x_sim, y_sim
+end
+
+"""
+    simulate(p::SSParams, att_kf::Matrix{Float64}, T_V::Vector{Float64}, N::Int, S::Int; delta_t_v::Int = 1)
+
+Simulate S future scenarios up to N steps ahead. Vector of average time to maturity as input.
+"""
+function simulate(p::SSParams, att_kf::Matrix{Float64}, T_V::Vector{Float64}, N::Int, S::Int; delta_t_v::Int = 1)
+    prods = length(T_V)
+    T = Matrix{Float64}(undef, N, prods)
+
+    # Representation of the time to maturity matrix
+    for i in 1:N, j in 1:prods
+        T[i, j] = T_V[j]
+    end
+
+    x_sim, y_sim = simulate(p, att_kf, T, N, S; delta_t = delta_t_v)
 end

@@ -1,7 +1,7 @@
 """
     forecast(f::Filter{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, N::Int; delta_t = 1) where Typ
 
-Returns the mean square error forecasts N steps ahead.
+Returns the mean square error forecasts N steps ahead. Matrix of time to maturity as an input.
 """
 function forecast(f::Filter{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, N::Int; delta_t = 1) where Typ
     n, prods = size(T)
@@ -38,6 +38,25 @@ function forecast(f::Filter{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, N::Int; delt
     for t = 1:N
         forec[t, :] = mean(dist[t])
     end
+
+    return forec
+end
+
+"""
+    forecast(f::Filter{Typ}, T_V::Vector{Typ}, p::SSParams{Typ}, N::Int; delta_t_v = 1) where Typ
+
+Returns the mean square error forecasts N steps ahead. Vector of average time to maturity as input.
+"""
+function forecast(f::Filter{Typ}, T_V::Vector{Typ}, p::SSParams{Typ}, N::Int; delta_t_v = 1) where Typ
+    prods = length(T_V)
+    T = Matrix{Typ}(undef, N, prods)
+
+    # Representation of the time to maturity matrix
+    for i in 1:N, j in 1:prods
+        T[i, j] = T_V[j]
+    end
+
+    forec = forecast(f, T, p, N; delta_t = delta_t_v)
 
     return forec
 end

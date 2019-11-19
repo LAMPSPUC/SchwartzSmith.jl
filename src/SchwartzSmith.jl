@@ -15,18 +15,41 @@ include("simulation.jl")
 include("forecast.jl")
 
 """
-    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seed::Vector{Typ} = -0.2*rand(Typ, 7 + size(ln_F, 2))) where Typ
+    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
-Estimation of the Schwartz Smith model. Returns the estimated parameters.
+Estimation of the Schwartz Smith model with a matrix of time to maturity as an input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seed::Vector{Typ} = -0.2*rand(Typ, 7 + size(ln_F, 2))) where Typ
+function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
-    # Parameters estimation
+    # Alocate memory
     n, prods = size(ln_F)
 
-    optseed = optimize(psi -> compute_likelihood(ln_F, T, psi, delta_t), seed, LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
+    n_psi         = 7 + prods
+    n_seeds       = size(seeds, 2)
+    @assert size(seeds, 1) == n_psi
+    loglikelihood = Vector{Typ}(undef, n_seeds)
+    psitilde      = Matrix{Typ}(undef, n_psi, n_seeds)
+    optseeds      = Vector{Optim.OptimizationResults}(undef, 0)
 
-    opt_param = optseed.minimizer
+    # Optimization
+    for i in 1:n_seeds
+        try
+            println("-------------------- Seed ", i, "--------------------")
+            # optimize
+            optseed = optimize(psi -> compute_likelihood(ln_F, T, psi, delta_t), seeds[:, i], LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
+            # allocate log_lik and minimizer
+            loglikelihood[i] = -optseed.minimum
+            psitilde[:, i] = optseed.minimizer
+            push!(optseeds, optseed)
+        catch err
+            println(err)
+        end
+    end
+
+    # Query results
+    log_lik, best_seed = findmax(loglikelihood)
+
+    opt_param = psitilde[:, best_seed]
 
     # Results
     k = exp(opt_param[1])
@@ -39,13 +62,35 @@ function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seed
     s = exp.(opt_param[8:end])
     p = SSParams(k, sigma_chi, lambda_chi, mi_xi, sigma_xi, mi_xi_star, rho_xi_chi, s)
 
-    return p, seed, optseed
+    return p, seeds[:, best_seed], optseeds[best_seed]
 end
+
+"""
+    schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+
+Estimation of the Schwartz Smith model with a vector of average time to maturity as an input. Returns the estimated parameters.
+"""
+function schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+
+    # Parameters estimation
+    n, prods = size(ln_F)
+    T = Matrix{Typ}(undef, n, prods)
+
+    # Representation of the time to maturity matrix
+    for i in 1:n, j in 1:prods
+        T[i, j] = T_V[j]
+    end
+
+    p, seed, optseeds = schwartzsmith(ln_F, T; delta_t = delta_t, seeds = seeds)
+
+    return p, seed, optseeds
+end
+
 
 """
     estimated_prices_states(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
 
-Returns the prices and the kalman filter struct estimated by the model.
+Returns the prices and the kalman filter struct estimated by the model. Matrix of time to maturity as an input.
 """
 function estimated_prices_states(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
     n, prods = size(T)
@@ -60,5 +105,23 @@ function estimated_prices_states(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{
     return y, f
 end
 
+"""
+    estimated_prices_states(p::SSParams{Typ}, T_V::Vector{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
+
+Returns the prices and the kalman filter struct estimated by the model. Vector of average time to maturity as an input.
+"""
+function estimated_prices_states(p::SSParams{Typ}, T_V::Vector{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
+    n, prods = size(ln_F)
+    T = Matrix{Typ}(undef, n, prods)
+
+    # Representation of the time to maturity matrix
+    for i in 1:n, j in 1:prods
+        T[i, j] = T_V[j]
+    end
+
+    y, f = estimated_prices_states(p, T, ln_F; delta_t = delta_t)
+
+    return y, f
+end
 
 end

@@ -48,9 +48,7 @@ function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, delt
         @assert isposdef(P_kf[:, :, t])
     end
 
-    f = Filter(a_kf, P_kf, att_kf, Ptt_kf, v_kf, F_kf)
-
-    return f
+    return Filter(a_kf, P_kf, att_kf, Ptt_kf, v_kf, F_kf)
 end
 
 mutable struct Filter{T}

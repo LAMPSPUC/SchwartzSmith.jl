@@ -27,3 +27,16 @@ function ensure_pos_sym!(M::AbstractArray{T}; ϵ::T = T(1e-8)) where T
     end
     return
 end
+
+"""
+    calc_seed(ln_F::Matrix{Typ}, n_seed::Int64) where Typ
+
+Random seed calculation for a time to maturity matrix.
+"""
+function calc_seed(ln_F::Matrix{Typ}, n_seed::Int64) where Typ
+
+    n, prods = size(ln_F)
+    seeds = Matrix{Typ}(undef, 7 + prods, n_seed)
+
+    return transpose!(seeds, -0.2*rand(Typ, n_seed, 7 + size(ln_F, 2)));
+end

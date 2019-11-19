@@ -1,13 +1,13 @@
 # include("C:\\Users\\mdietze\\Dropbox\\PUC\\Eneva\\Schwartz-Smith\\SchwartzSmith.jl\\src\\SchwartzSmith.jl")
 
-push!(LOAD_PATH, "C:\\Users\\mdietze\\Dropbox\\PUC\\Eneva\\Schwartz-Smith\\SchwartzSmith.jl\\src")
+push!(LOAD_PATH, "C:\\Users\\marin\\Dropbox\\PUC\\Eneva\\Schwartz-Smith\\SchwartzSmith.jl\\src")
 using SchwartzSmith
 
 using DelimitedFiles
 using Statistics
 using Plots
 
-path = "C:\\Users\\mdietze\\Dropbox\\PUC\\Eneva\\Schwartz-Smith"
+path = "C:\\Users\\marin\\Dropbox\\PUC\\Eneva\\Schwartz-Smith"
 
 function get_prices_T(path::String)
     in_data = readdlm(joinpath(path,"price_tm.csv"),';')
@@ -79,8 +79,9 @@ plot(forward_prices_M1, forward_prices_M2, forward_prices_M3, forward_prices_M4)
 
 plot!((sum(f.att_kf, dims = 2)))
 
-plot(ln_F[:, 1])
-plot!(sum(f.att_kf, dims = 2))
+plot(prices[1:200, 1])
+plot!(exp.(y[:, 1]))
+plot!(exp.(sum(f.att_kf, dims = 2)))
 
 histogram(f.v_kf[:])
 #---------------- Scenarios simulation -------------------#

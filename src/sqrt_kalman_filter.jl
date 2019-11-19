@@ -56,7 +56,7 @@ function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delt
         sqrtF_kf[:, :, t]  = Ustar[range2, range2]
 
         # Kalman gain and predictive state update
-        K_kf[:, :, t]       = U2star[:, :, t]*inv(sqrtF_kf[:, :, t])
+        K_kf[:, :, t]       = U2star[:, :, t]*pinv(sqrtF_kf[:, :, t])
         a_kf[t+1, :]        = T_kf*a_kf[t, :] + K_kf[:, :, t]*v_kf[t, :] + c_kf
         sqrtP_kf[:, :, t+1] = Ustar[range1, range1]
     end
