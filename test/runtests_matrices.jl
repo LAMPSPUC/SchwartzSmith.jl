@@ -1,21 +1,20 @@
-using Test
-
 @testset "Matrices" begin
+    k = 1.49
+    sigma_chi = 0.286
+    lambda_chi = 0.157
+    mi_xi = -0.0125
+    sigma_xi = 0.145
+    mi_xi_star = 0.0115
+    rho_xi_chi = 0.3
+
+    s = [
+        0.042;
+        0.006;
+    ]
+
+    p = SchwartzSmith.SSParams(k,sigma_chi,lambda_chi,mi_xi,sigma_xi,mi_xi_star,rho_xi_chi,s)
+
     @testset "SSParams" begin
-        k = 1.49
-        sigma_chi = 0.286
-        lambda_chi = 0.157
-        mi_xi = -0.0125
-        sigma_xi = 0.145
-        mi_xi_star = 0.0115
-        rho_xi_chi = 0.3
-
-        s = [
-            0.042;
-            0.006;
-        ]
-
-        p = SchwartzSmith.SSParams(k,sigma_chi,lambda_chi,mi_xi,sigma_xi,mi_xi_star,rho_xi_chi,s)
 
         @test p.k ≈ 1.49 atol = 1e-4 rtol = 1e-4
         @test p.σ_χ ≈ 0.286 atol = 1e-4 rtol = 1e-4
