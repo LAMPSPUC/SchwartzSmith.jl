@@ -14,12 +14,9 @@ pkg> add https://github.com/LAMPSPUC/SchwartzSmith.jl.git
 ## Features
 
 * Parameter estimation
-1. Original and average time to maturity
-
-2. Random or predefined seed
-
+    * Original and average time to maturity
+    * Random or predefined seed
 * Simulation
-
 * Forecasting
 
 
