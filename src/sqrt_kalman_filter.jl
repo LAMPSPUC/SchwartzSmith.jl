@@ -28,8 +28,6 @@ function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delt
     a_kf[1, :]    = zeros(2, 1)
     sqrtP_kf[:, :, 1] = 1e1 .* Matrix(I, 2, 2)
 
-    ensure_pos_sym!(W(p, delta_t))
-
     sqrt_Q = cholesky(W(p, delta_t)).L
     sqrt_H = cholesky(V(p)).L
 
@@ -58,13 +56,12 @@ function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delt
         sqrtF_kf[:, :, t]  = Ustar[range2, range2]
 
         # Kalman gain and predictive state update
-        K_kf[:, :, t]       = U2star[:, :, t]*inv(sqrtF_kf[:, :, t])
+        K_kf[:, :, t]       = U2star[:, :, t]*pinv(sqrtF_kf[:, :, t])
         a_kf[t+1, :]        = T_kf*a_kf[t, :] + K_kf[:, :, t]*v_kf[t, :] + c_kf
         sqrtP_kf[:, :, t+1] = Ustar[range1, range1]
     end
 
     F_kf = gram_in_time(sqrtF_kf)
-    ensure_pos_sym!(F_kf)
 
     return v_kf, F_kf
 end

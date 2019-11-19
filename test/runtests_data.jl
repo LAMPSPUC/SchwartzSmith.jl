@@ -33,8 +33,8 @@ end
 prices, T_all = get_prices_T(path)
 
 n, prods = size(prices)
-ln_F = log.(prices[1:n, 1:prods])[1:800, :]
-T = T_all[1:800, :]
+ln_F = log.(prices[1:n, 1:prods])[1:500, :]
+T = T_all[1:500, :]
 
 T_A = [mean(T[:, 1]); mean(T[:,2])]
 
@@ -48,10 +48,19 @@ y, f = estimated_prices_states(p, T, ln_F)
 seed_T = seed;
 
 # Schwartz Smith model with a specific seed
-p, seed, optseed = schwartzsmith(ln_F, T; seeds = seed_T)
-y, f = estimated_prices_states(p, T, ln_F)
+seed_A = [-0.15698310465032694
+ -0.14497516893356796
+ -0.10300713562481496
+ -0.09296434815599874
+ -0.13956616744266512
+ -0.13056494535739907
+ -0.04466052260412545
+ -0.1278401688883932
+ -0.13762021695260906]
 
-p, seed, optseed = schwartzsmith(ln_F, T_A; seeds = seed_A)
+seed_A = SchwartzSmith.calc_seed(ln_F, 5)
+
+p, seed, optseed = schwartzsmith(ln_F, T_A)
 y, f = estimated_prices_states(p, T_A, ln_F)
 
 # Scenarios simulation
