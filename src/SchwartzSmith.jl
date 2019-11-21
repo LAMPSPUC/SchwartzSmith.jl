@@ -4,7 +4,7 @@ using Optim
 using LinearAlgebra
 using Distributions
 
-export schwartzsmith, estimated_prices_states, simulate, forecast
+export schwartzsmith, estimated_prices_states, simulate, forecast, calc_seed
 
 include("create_matrices.jl")
 include("auxiliar.jl")
