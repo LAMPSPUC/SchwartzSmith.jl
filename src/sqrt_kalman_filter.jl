@@ -29,7 +29,7 @@ function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delt
     sqrtP_kf[:, :, 1] = 1e1 .* Matrix(I, 2, 2)
 
     sqrt_Q = cholesky(W(p, delta_t)).L
-    sqrt_H = cholesky(V(p)).L
+    sqrt_H = V(p)
 
     # Pre-allocating for performance
     zeros_pr = zeros(prods, 2)

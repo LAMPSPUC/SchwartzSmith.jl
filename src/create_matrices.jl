@@ -21,6 +21,11 @@ function A(T, p::SSParams)
 end
 
 function V(p::SSParams)
+    for i in eachindex(p.s)
+        if p.s[i] > 1e3
+            p.s[i] = 1e3
+        end
+    end
     cov_matrix = Diagonal(p.s.^2)
     ensure_pos_sym!(cov_matrix)
     return cov_matrix
