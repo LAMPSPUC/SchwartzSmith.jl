@@ -29,7 +29,7 @@ function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seed
     @assert size(seeds, 1) == n_psi
     loglikelihood = Vector{Typ}(undef, n_seeds)
     psitilde      = Matrix{Typ}(undef, n_psi, n_seeds)
-    optseeds      = Vector{Optim.OptimizationResults}(undef, 0)
+    optseeds      = Vector{Optim.OptimizationResults}(undef, n_seeds)
 
     # Optimization
     for i in 1:n_seeds
@@ -40,7 +40,7 @@ function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seed
             # allocate log_lik and minimizer
             loglikelihood[i] = -optseed.minimum
             psitilde[:, i] = optseed.minimizer
-            push!(optseeds, optseed)
+            optseeds[i] = optseed
         catch err
             println(err)
         end
