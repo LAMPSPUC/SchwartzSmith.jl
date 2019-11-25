@@ -51,6 +51,26 @@ function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, delt
     return Filter(a_kf, P_kf, att_kf, Ptt_kf, v_kf, F_kf)
 end
 
+"""
+    kalman_filter(ln_F::Matrix{Typ}, T_V::Vector{Typ}, p::SSParams{Typ}, delta_t::Int) where Typ
+
+Definition of the Kalman Filter recursion.
+"""
+function kalman_filter(ln_F::Matrix{Typ}, T_V::Vector{Typ}, p::SSParams{Typ}, delta_t::Int) where Typ
+
+    n, prods = size(ln_F)
+    T = Matrix{Typ}(undef, n, prods)
+
+    # Representation of the time to maturity matrix
+    for i in 1:n, j in 1:prods
+        T[i, j] = T_V[j]
+    end
+
+    f = kalman_filter(ln_F, T, p, delta_t)
+
+    return f
+end
+
 mutable struct Filter{T}
     a_kf::Matrix{T}
     P_kf::Array{T, 3}
