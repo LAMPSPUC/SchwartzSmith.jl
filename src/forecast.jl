@@ -7,7 +7,7 @@ function forecast(f::Filter{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, N::Int; delt
     n, prods = size(T)
 
     # Initial values
-    a0 = f.a_kf[end, :]
+    a0 = f.att_kf[end, :]
     P0 = f.P_kf[:, :, end]
     F0 = f.F_kf[:, :, end]
 
