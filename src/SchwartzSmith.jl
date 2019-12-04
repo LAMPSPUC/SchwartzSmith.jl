@@ -13,6 +13,7 @@ include("sqrt_kalman_filter.jl")
 include("estimation.jl")
 include("simulation.jl")
 include("forecast.jl")
+include("estimated_prices.jl")
 
 """
     schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
@@ -23,6 +24,8 @@ function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seed
 
     # Alocate memory
     n, prods = size(ln_F)
+    s = 0 # No seasonality to be modelled
+    D = Matrix{Float64}(undef, 0, 0)
 
     n_psi         = 7 + prods
     n_seeds       = size(seeds, 2)
@@ -36,7 +39,7 @@ function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seed
         try
             println("-------------------- Seed ", i, "--------------------")
             # optimize
-            optseed = optimize(psi -> compute_likelihood(ln_F, T, psi, delta_t), seeds[:, i], LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
+            optseed = optimize(psi -> compute_likelihood(ln_F, T, D, psi, delta_t), seeds[:, i], LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
             # allocate log_lik and minimizer
             loglikelihood[i] = -optseed.minimum
             psitilde[:, i] = optseed.minimizer
@@ -86,31 +89,66 @@ function schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}; delta_t::Int = 1, se
     return p, seed, optseeds
 end
 
-
 """
-    estimated_prices_states(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
+    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
-Returns the prices and the kalman filter struct estimated by the model. Matrix of time to maturity as an input.
+Estimation of the Schwartz Smith model with a matrix of time to maturity as an input. Returns the estimated parameters.
 """
-function estimated_prices_states(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
-    n, prods = size(T)
-    y = Array{Typ, 2}(undef, n, prods)
+function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
-    f = kalman_filter(ln_F, T, p, delta_t)
+    # Alocate memory
+    n, prods = size(ln_F)
+    D = calc_D(s, dates)
 
-    for t in 1:n
-        y[t, :] = d(T[t, :], p) + F(T[t, :], p) * f.att_kf[t, :]
+    n_psi         = 7 + prods
+    n_seeds       = size(seeds, 2)
+    @assert size(seeds, 1) == n_psi
+    loglikelihood = Vector{Typ}(undef, n_seeds)
+    psitilde      = Matrix{Typ}(undef, n_psi, n_seeds)
+    optseeds      = Vector{Optim.OptimizationResults}(undef, n_seeds)
+
+    # Optimization
+    for i in 1:n_seeds
+        try
+            println("-------------------- Seed ", i, "--------------------")
+            # optimize
+            optseed = optimize(psi -> compute_likelihood(ln_F, T, D, psi, delta_t), seeds[:, i], LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
+            # allocate log_lik and minimizer
+            loglikelihood[i] = -optseed.minimum
+            psitilde[:, i] = optseed.minimizer
+            optseeds[i] = optseed
+        catch err
+            println(err)
+        end
     end
 
-    return y, f
+    # Query results
+    log_lik, best_seed = findmax(loglikelihood)
+
+    opt_param = psitilde[:, best_seed]
+
+    # Results
+    k = exp(opt_param[1])
+    sigma_chi = exp(opt_param[2])
+    lambda_chi = opt_param[3]
+    mi_xi = opt_param[4]
+    sigma_xi = exp(opt_param[5])
+    mi_xi_star = opt_param[6]
+    rho_xi_chi = -1 + 2/(1 + exp(-opt_param[7]))
+    s = exp.(opt_param[8:end])
+    p = SSParams(k, sigma_chi, lambda_chi, mi_xi, sigma_xi, mi_xi_star, rho_xi_chi, s)
+
+    return p, seeds[:, best_seed], optseeds[best_seed]
 end
 
 """
-    estimated_prices_states(p::SSParams{Typ}, T_V::Vector{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
+    schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
-Returns the prices and the kalman filter struct estimated by the model. Vector of average time to maturity as an input.
+Estimation of the Schwartz Smith model with a vector of average time to maturity as an input. Returns the estimated parameters.
 """
-function estimated_prices_states(p::SSParams{Typ}, T_V::Vector{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
+function schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+
+    # Parameters estimation
     n, prods = size(ln_F)
     T = Matrix{Typ}(undef, n, prods)
 
@@ -119,9 +157,10 @@ function estimated_prices_states(p::SSParams{Typ}, T_V::Vector{Typ}, ln_F::Matri
         T[i, j] = T_V[j]
     end
 
-    y, f = estimated_prices_states(p, T, ln_F; delta_t = delta_t)
+    p, seed, optseeds = schwartzsmith(ln_F, T, dates, s; delta_t = delta_t, seeds = seeds)
 
-    return y, f
+    return p, seed, optseeds
 end
+
 
 end

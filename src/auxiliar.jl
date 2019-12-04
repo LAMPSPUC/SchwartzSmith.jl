@@ -40,3 +40,18 @@ function calc_seed(ln_F::Matrix{Typ}, n_seed::Int64) where Typ
 
     return transpose!(seeds, -0.2*rand(Typ, n_seed, 7 + size(ln_F, 2)));
 end
+
+"""
+    calc_D(s::Int, dates::Vector{Int64})
+
+Calculates the dummy matrix for seasonality.
+"""
+function calc_D(s::Int, dates::Vector{Int64})
+    n = length(dates)
+    D = zeros(Float64, n, s)
+
+    for i in 1:n
+        D[i, dates[i]] = 1
+    end
+    return D
+end
