@@ -24,7 +24,6 @@ function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, delt
     P_kf[:, :, 1] = 1e1 .* Matrix(I, 2, 2)
 
     RQR = R(s)*W(p, delta_t)*R(s)'
-    @assert isposdef(RQR)
     H = V(p)
     @assert isposdef(H)
 
@@ -98,7 +97,6 @@ function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, D::Matrix{Float64}, p:
     P_kf[:, :, 1] = 1e1 .* Matrix(I, 2 + s, 2 + s)
 
     RQR = R(s)*W(p, delta_t)*R(s)'
-    @assert isposdef(RQR)
     H = V(p)
     @assert isposdef(H)
 
