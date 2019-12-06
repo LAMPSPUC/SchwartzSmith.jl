@@ -73,7 +73,6 @@ end
 Square Root Kalman Filter.
 """
 function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, D::Matrix{Typ}, p::SSParams, delta_t::Int) where Typ
-
     n, prods = size(ln_F)
     s = size(D, 2)
 

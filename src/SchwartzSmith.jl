@@ -14,6 +14,7 @@ include("estimation.jl")
 include("simulation.jl")
 include("forecast.jl")
 include("estimated_prices.jl")
+include("smoother.jl")
 
 """
     schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
