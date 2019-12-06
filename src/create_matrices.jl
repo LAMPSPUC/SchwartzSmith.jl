@@ -42,15 +42,24 @@ function W(p::SSParams, delta_t::Int)
     return cov_matrix
 end
 
-function G(p::SSParams, delta_t::Int)
-    return [
-            exp(-p.k * delta_t)     0
-            0                       1
-    ]
+function G(p::SSParams, s::Int64, delta_t::Int)
+    G_aux = [exp(-p.k * delta_t)     0
+        0                       1]
+
+    if s == 0
+        return G_aux
+    else
+        G_s = zeros(Float64, 2 + s, 2 + s)
+
+        G_s[1:2, 1:2]      = G_aux
+        G_s[3:end, 3:end]  = 1 .* Matrix(I, s, s)
+
+        return G_s
+    end
 end
 
-function c(p::SSParams, delta_t::Int)
-    return [0; p.μ_ξ * delta_t]
+function c(p::SSParams, s::Int64, delta_t::Int)
+    return [0; p.μ_ξ * delta_t; zeros(s)]
 end
 
 function d(T::Vector{Typ}, p::SSParams) where Typ
@@ -62,18 +71,39 @@ function d(T::Vector{Typ}, p::SSParams) where Typ
     return A_vec
 end
 
-function F(T::Vector{Typ}, p::SSParams) where Typ
-    F_matrix = Matrix{Typ}(undef, length(T), 2)
+function F(T::Vector{Typ}, p::SSParams, D_t::Vector{Float64}) where Typ
+    s = length(D_t)
+
+    F_aux = Matrix{Typ}(undef, length(T), 2)
     for (i, t) in enumerate(T)
         e = exp(-p.k * t)
 
         if e <= 1e-8
-            F_matrix[i, 1] = 1e-8
+            F_aux[i, 1] = 1e-8
         else
-            F_matrix[i, 1] = exp(-p.k * t)
+            F_aux[i, 1] = exp(-p.k * t)
         end
 
-        F_matrix[i, 2] = 1
+        F_aux[i, 2] = 1
     end
-    return F_matrix
+
+    if s == 0
+        return F_aux
+    else
+        F_s = Matrix{Float64}(undef, length(T), 2 + s)
+        F_s[:, 1:2]    = F_aux
+        F_s[:, 3:end] .= D_t'
+
+        return F_s
+    end
+end
+
+function R(s::Int64)
+    R_aux = 1 .* Matrix(I, 2, 2)
+
+    if s == 0
+        return R_aux
+    else
+        return [R_aux; zeros(s, 2)]
+    end
 end

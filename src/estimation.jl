@@ -13,12 +13,12 @@ function calc_likelihood(v_kf::Matrix{Typ}, F_kf::Array{Typ, 3}, n::Int, prods::
 end
 
 """
-    compute_likelihood(ln_F::Matrix{Typ}, T::Matrix{Typ}, psi::Vector{Typ}, delta_t::Int) where Typ
+    compute_likelihood(ln_F::Matrix{Typ}, T::Matrix{Typ}, D::Matrix{Float64}, psi::Vector{Typ}, delta_t::Int) where Typ
 
 Parameters definition and Kalman filter execution to calculate the log likelihood. Function that will be optmized to obtain
 the best set of parameters.
 """
-function compute_likelihood(ln_F::Matrix{Typ}, T::Matrix{Typ}, psi::Vector{Typ}, delta_t::Int) where Typ
+function compute_likelihood(ln_F::Matrix{Typ}, T::Matrix{Typ}, D::Matrix{Float64}, psi::Vector{Typ}, delta_t::Int) where Typ
 
     k = exp(psi[1])
     σ_χ = exp(psi[2])
@@ -34,7 +34,12 @@ function compute_likelihood(ln_F::Matrix{Typ}, T::Matrix{Typ}, psi::Vector{Typ},
     n, prods = size(ln_F)
     @assert length(s) == prods
 
-    v_kf, F_kf = sqrt_kalman_filter(ln_F, T, p, delta_t)
+    s = size(D, 2)
+    if s == 0
+        v_kf, F_kf = sqrt_kalman_filter(ln_F, T, p, delta_t)
+    else
+        v_kf, F_kf = sqrt_kalman_filter(ln_F, T, D, p, delta_t)
+    end
 
     return calc_likelihood(v_kf, F_kf, n, prods)
 end
