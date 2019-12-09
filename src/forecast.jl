@@ -64,13 +64,13 @@ function forecast(f::Filter{Typ}, T_V::Vector{Typ}, p::SSParams{Typ}, N::Int; de
 end
 
 """
-    forecast(f::Filter{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, N::Int; delta_t = 1) where Typ
+    forecast(f::Filter{Typ}, T::Matrix{Typ}, dates::Vector{Int64}, s::Int64, p::SSParams{Typ}, N::Int; delta_t = 1) where Typ
 
 Returns the mean square error forecasts N steps ahead. Matrix of time to maturity as an input.
 """
-function forecast(f::Filter{Typ}, T::Matrix{Typ}, D::Matrix{Typ}, p::SSParams{Typ}, N::Int; delta_t = 1) where Typ
+function forecast(f::Filter{Typ}, T::Matrix{Typ}, dates::Vector{Int64}, s::Int64, p::SSParams{Typ}, N::Int; delta_t = 1) where Typ
     n, prods = size(T)
-    s = size(D, 2)
+    D = calc_D(s, dates)
 
     # Initial values
     a0 = f.att_kf[end, :]
@@ -109,11 +109,11 @@ function forecast(f::Filter{Typ}, T::Matrix{Typ}, D::Matrix{Typ}, p::SSParams{Ty
 end
 
 """
-    forecast(f::Filter{Typ}, T_V::Vector{Typ}, p::SSParams{Typ}, N::Int; delta_t_v = 1) where Typ
+    forecast(f::Filter{Typ}, T_V::Vector{Typ}, dates::Vector{Int64}, s::Int64, p::SSParams{Typ}, N::Int; delta_t_v = 1) where Typ
 
 Returns the mean square error forecasts N steps ahead. Vector of average time to maturity as input.
 """
-function forecast(f::Filter{Typ}, T_V::Vector{Typ}, D::Matrix{Float64}, p::SSParams{Typ}, N::Int; delta_t_v = 1) where Typ
+function forecast(f::Filter{Typ}, T_V::Vector{Typ}, dates::Vector{Int64}, s::Int64, p::SSParams{Typ}, N::Int; delta_t_v = 1) where Typ
     prods = length(T_V)
     T = Matrix{Typ}(undef, N, prods)
 
@@ -122,7 +122,7 @@ function forecast(f::Filter{Typ}, T_V::Vector{Typ}, D::Matrix{Float64}, p::SSPar
         T[i, j] = T_V[j]
     end
 
-    forec = forecast(f, T, D, p, N; delta_t = delta_t_v)
+    forec = forecast(f, T, dates, s, p, N; delta_t = delta_t_v)
 
     return forec
 end
