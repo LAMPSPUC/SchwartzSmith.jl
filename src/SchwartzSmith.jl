@@ -26,7 +26,7 @@ function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seed
     # Alocate memory
     n, prods = size(ln_F)
     s = 0 # No seasonality to be modelled
-    D = Matrix{Float64}(undef, 0, 0)
+    D = Array{Float64, 3}(undef, 0, 0, 0)
 
     n_psi         = 7 + prods
     n_seeds       = size(seeds, 2)
@@ -95,7 +95,7 @@ end
 
 Estimation of the Schwartz Smith model with a matrix of time to maturity as an input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}, dates::Matrix{Int64}, s::Int64; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
     # Alocate memory
     n, prods = size(ln_F)
@@ -147,7 +147,7 @@ end
 
 Estimation of the Schwartz Smith model with a vector of average time to maturity as an input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}, dates::Matrix{Int64}, s::Int64; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
     # Parameters estimation
     n, prods = size(ln_F)

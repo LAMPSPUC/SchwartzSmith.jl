@@ -44,14 +44,17 @@ end
 """
     calc_D(s::Int, dates::Vector{Int64})
 
-Calculates the dummy matrix for seasonality.
+Calculates the dummy matrix for seasonality. The dummy is equal to 1 on the delivery date.
 """
-function calc_D(s::Int, dates::Vector{Int64})
-    n = length(dates)
-    D = zeros(Float64, n, s)
+function calc_D(s::Int, dates::Matrix{Int64})
+    n     = size(dates, 1)
+    prods = size(dates, 2)
+    D     = zeros(Float64, prods, n, s)
 
-    for i in 1:n
-        D[i, dates[i]] = 1
+    for i in 1:prods
+        for j in 1:n
+            D[i, j, dates[j, i]] = 1
+        end
     end
     return D
 end

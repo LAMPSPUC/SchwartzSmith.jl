@@ -3,11 +3,11 @@
 
 Function to obtain the smoothed states when seasonality is included.
 """
-function smoother(ln_F::Matrix{Typ}, T::Matrix{Typ}, f::Filter{Typ}, p::SSParams{Typ}, D::Matrix{Float64}, delta_t::Int64) where Typ
+function smoother(ln_F::Matrix{Typ}, T::Matrix{Typ}, f::Filter{Typ}, p::SSParams{Typ}, D::Array{Float64, 3}, delta_t::Int64) where Typ
     # Dimensions data
     n, prods = size(ln_F)
     m = size(f.att_kf, 2)
-    s = size(D, 2)
+    s = size(D, 3)
 
     # Load filter data
     a_kf = f.a_kf
@@ -27,7 +27,7 @@ function smoother(ln_F::Matrix{Typ}, T::Matrix{Typ}, f::Filter{Typ}, p::SSParams
     r[end, :]    = zeros(m, 1)
 
     for t = n:-1:2
-        Z_kf = F(T[t, :], p, D[t, :])
+        Z_kf = F(T[t, :], p, D[:, t, :])
         T_kf = G(p, s, delta_t)
         d_kf = d(T[t, :], p)
         c_kf = c(p, s, delta_t)
@@ -43,7 +43,7 @@ function smoother(ln_F::Matrix{Typ}, T::Matrix{Typ}, f::Filter{Typ}, p::SSParams
     end
 
     # Last iteration
-    Z_kf = F(T[1, :], p, D[1, :])
+    Z_kf = F(T[1, :], p, D[:, 1, :])
     T_kf = G(p, s, delta_t)
     d_kf = d(T[1, :], p)
     c_kf = c(p, s, delta_t)
@@ -66,7 +66,7 @@ end
 Function to obtain the smoothed states without seasonality.
 """
 function smoother(ln_F::Matrix{Typ}, T::Matrix{Typ}, f::Filter{Typ}, p::SSParams{Typ}, delta_t::Int64) where Typ
-    D_t = Vector{Float64}(undef, 0)
+    D_t = Matrix{Float64}(undef, 0, 0)
     s = 0
 
     # Dimensions data

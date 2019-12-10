@@ -6,7 +6,7 @@ Definition of the Kalman Filter recursion.
 function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams{Typ}, delta_t::Int) where Typ
 
     n, prods = size(ln_F)
-    D_t = Vector{Float64}(undef, 0)
+    D_t = Matrix{Float64}(undef, 0, 0)
     s = 0
 
     # Predictive state and its covariance matrix
@@ -77,10 +77,10 @@ end
 
 Definition of the Kalman Filter recursion.
 """
-function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, D::Matrix{Float64}, p::SSParams{Typ}, delta_t::Int) where Typ
+function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, D::Array{Float64, 3}, p::SSParams{Typ}, delta_t::Int) where Typ
 
     n, prods = size(ln_F)
-    s = size(D, 2)
+    s = size(D, 3)
 
     # Predictive state and its covariance matrix
     a_kf   = Matrix{Typ}(undef, n+1, 2 + s)
@@ -102,7 +102,7 @@ function kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, D::Matrix{Float64}, p:
 
     # Kalman filter recursion equations
     for t = 1:n
-        Z_kf = F(T[t, :], p, D[t, :])
+        Z_kf = F(T[t, :], p, D[:, t, :])
         T_kf = G(p, s, delta_t)
         d_kf = d(T[t, :], p)
         c_kf = c(p, s, delta_t)
@@ -130,7 +130,7 @@ end
 
 Definition of the Kalman Filter recursion.
 """
-function kalman_filter(ln_F::Matrix{Typ}, T_V::Vector{Typ}, D::Matrix{Float64}, p::SSParams{Typ}, delta_t::Int) where Typ
+function kalman_filter(ln_F::Matrix{Typ}, T_V::Vector{Typ}, D::Array{Float64, 3}, p::SSParams{Typ}, delta_t::Int) where Typ
 
     n, prods = size(ln_F)
     T = Matrix{Typ}(undef, n, prods)

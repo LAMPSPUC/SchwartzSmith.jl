@@ -6,7 +6,7 @@ Square Root Kalman Filter.
 function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delta_t::Int) where Typ
 
     n, prods = size(ln_F)
-    D_t = Vector{Float64}(undef, 0)
+    D_t = Matrix{Float64}(undef, 0, 0)
     s = 0
 
     # Predictive state and its covariance matrix
@@ -72,9 +72,9 @@ end
 
 Square Root Kalman Filter.
 """
-function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, D::Matrix{Typ}, p::SSParams, delta_t::Int) where Typ
+function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, D::Array{Typ, 3}, p::SSParams, delta_t::Int) where Typ
     n, prods = size(ln_F)
-    s = size(D, 2)
+    s = size(D, 3)
 
     # Predictive state and its covariance matrix
     a_kf     = Matrix{Typ}(undef, n+1, 2 + s)
@@ -109,7 +109,7 @@ function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, D::Matrix{Typ}, p
 
     # Square-root Kalman filter
     for t = 1:n
-        Z_kf = F(T[t, :], p, D[t, :])
+        Z_kf = F(T[t, :], p, D[:, t, :])
         T_kf = G(p, s, delta_t)
         d_kf = d(T[t, :], p)
         c_kf = c(p, s, delta_t)

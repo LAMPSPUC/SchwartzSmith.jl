@@ -71,8 +71,8 @@ function d(T::Vector{Typ}, p::SSParams) where Typ
     return A_vec
 end
 
-function F(T::Vector{Typ}, p::SSParams, D_t::Vector{Float64}) where Typ
-    s = length(D_t)
+function F(T::Vector{Typ}, p::SSParams, D_t::Matrix{Float64}) where Typ
+    s = size(D_t, 2)
 
     F_aux = Matrix{Typ}(undef, length(T), 2)
     for (i, t) in enumerate(T)
@@ -92,7 +92,7 @@ function F(T::Vector{Typ}, p::SSParams, D_t::Vector{Float64}) where Typ
     else
         F_s = Matrix{Float64}(undef, length(T), 2 + s)
         F_s[:, 1:2]    = F_aux
-        F_s[:, 3:end] .= D_t'
+        F_s[:, 3:end] .= D_t
 
         return F_s
     end
