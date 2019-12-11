@@ -66,6 +66,7 @@ function simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, date
     prods = size(T, 2)
 
     D = calc_D(s, dates)
+    s = size(D, 2)
 
     # Covariance matrices
     Q = W(p, delta_t)

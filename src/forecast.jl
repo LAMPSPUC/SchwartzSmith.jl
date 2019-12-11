@@ -71,7 +71,8 @@ Returns the mean square error forecasts N steps ahead. Matrix of time to maturit
 function forecast(f::Filter{Typ}, T::Matrix{Typ}, dates::Vector{Int64}, s::Int64, p::SSParams{Typ}, N::Int; delta_t = 1) where Typ
     n, prods = size(T)
     D = calc_D(s, dates)
-
+    s = size(D, 2)
+    
     # Initial values
     a0 = f.att_kf[end, :]
     P0 = f.P_kf[:, :, end]
