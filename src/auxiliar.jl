@@ -48,10 +48,12 @@ Calculates the dummy matrix for seasonality.
 """
 function calc_D(s::Int, dates::Vector{Int64})
     n = length(dates)
-    D = zeros(Float64, n, s)
+    D = zeros(Float64, n, s - 1)
 
     for i in 1:n
-        D[i, dates[i]] = 1
+        if dates[i] != s
+            D[i, dates[i]] = 1
+        end
     end
     return D
 end
