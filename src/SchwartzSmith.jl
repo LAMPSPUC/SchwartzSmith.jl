@@ -4,29 +4,30 @@ using Optim
 using LinearAlgebra
 using Distributions
 
-export schwartzsmith, estimated_prices_states, simulate, forecast, calc_seed, kalman_filter
+export schwartzsmith, estimated_prices, simulate, forecast, calc_seed, sqrt_kalman_filter, calc_D
 
-include("create_matrices.jl")
 include("auxiliar.jl")
-include("kalman_filter.jl")
+include("create_matrices.jl")
 include("sqrt_kalman_filter.jl")
-include("estimation.jl")
-include("simulation.jl")
-include("forecast.jl")
+include("sqrt_filtered_state.jl")
+include("sqrt_smoother.jl")
 include("estimated_prices.jl")
-include("smoother.jl")
+include("estimation.jl")
+include("forecast.jl")
+include("simulation.jl")
 
 """
     schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
 Estimation of the Schwartz Smith model with a matrix of time to maturity as an input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    ln_F = ln_F[:, :]
 
     # Alocate memory
     n, prods = size(ln_F)
-    s = 0 # No seasonality to be modelled
-    D = Matrix{Float64}(undef, 0, 0)
+    n_exp = 0 # No exogenous variables
+    X = Matrix{Float64}(undef, 0, 0)
 
     n_psi         = 7 + prods
     n_seeds       = size(seeds, 2)
@@ -40,7 +41,7 @@ function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seed
         try
             println("-------------------- Seed ", i, "--------------------")
             # optimize
-            optseed = optimize(psi -> compute_likelihood(ln_F, T, D, psi, delta_t), seeds[:, i], LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
+            optseed = optimize(psi -> compute_likelihood(ln_F, T, X, psi, delta_t), seeds[:, i], LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
             # allocate log_lik and minimizer
             loglikelihood[i] = -optseed.minimum
             psitilde[:, i] = optseed.minimizer
@@ -72,9 +73,10 @@ end
 """
     schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
-Estimation of the Schwartz Smith model with a vector of average time to maturity as an input. Returns the estimated parameters.
+Estimation of the Schwartz Smith model with a vector of time to maturity as an input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    ln_F = ln_F[:, :]
 
     # Parameters estimation
     n, prods = size(ln_F)
@@ -91,15 +93,18 @@ function schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}; delta_t::Int = 1, se
 end
 
 """
-    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
-Estimation of the Schwartz Smith model with a matrix of time to maturity as an input. Returns the estimated parameters.
+Estimation of the Schwartz Smith model with a matrix of time to maturity and exogenous variables as input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    ln_F = ln_F[:, :]
 
     # Alocate memory
     n, prods = size(ln_F)
-    D = calc_D(s, dates)
+
+    X = X[:,:]
+    n_exp    = size(X, 2)
 
     n_psi         = 7 + prods
     n_seeds       = size(seeds, 2)
@@ -113,7 +118,7 @@ function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}, dates::Vector{Int64}, 
         try
             println("-------------------- Seed ", i, "--------------------")
             # optimize
-            optseed = optimize(psi -> compute_likelihood(ln_F, T, D, psi, delta_t), seeds[:, i], LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
+            optseed = optimize(psi -> compute_likelihood(ln_F, T, X, psi, delta_t), seeds[:, i], LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
             # allocate log_lik and minimizer
             loglikelihood[i] = -optseed.minimum
             psitilde[:, i] = optseed.minimizer
@@ -143,11 +148,12 @@ function schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}, dates::Vector{Int64}, 
 end
 
 """
-    schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}, X::VecOrMat; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
-Estimation of the Schwartz Smith model with a vector of average time to maturity as an input. Returns the estimated parameters.
+Estimation of the Schwartz Smith model with a vector of time to maturity and exogenous variables as input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}, X::VecOrMat; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    ln_F = ln_F[:, :]
 
     # Parameters estimation
     n, prods = size(ln_F)
@@ -158,7 +164,7 @@ function schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}, dates::Vector{Int64}
         T[i, j] = T_V[j]
     end
 
-    p, seed, optseeds = schwartzsmith(ln_F, T, dates, s; delta_t = delta_t, seeds = seeds)
+    p, seed, optseeds = schwartzsmith(ln_F, T, X; delta_t = delta_t, seeds = seeds)
 
     return p, seed, optseeds
 end
