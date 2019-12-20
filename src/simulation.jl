@@ -1,13 +1,15 @@
 """
-    simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, N::Int, S::Int; delta_t::Int = 1)
+    simulate(T::Matrix{Float64}, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t::Int = 1)
 
 Simulate S future scenarios up to N steps ahead. Matrix of time to maturity as input.
 """
-function simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, N::Int, S::Int; delta_t::Int = 1)
+function simulate(T::Matrix{Float64}, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t::Int = 1)
+    att_kf = f.att_kf
+
     n = size(att_kf, 1)
     prods = size(T, 2)
-    D_t = Vector{Float64}(undef, 0)
-    s = 0
+    X_t = Vector{Float64}(undef, 0)
+    n_exp = 0
 
     # Covariance matrices
     Q = W(p, delta_t)
@@ -26,13 +28,13 @@ function simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, N::I
         v = rand(dist_v, N)'
 
         # Initial values
-        x_sim[1, :, i] = c(p, s, delta_t) + G(p, s, delta_t) * att_kf[n, :] + R(s) * ω[1, :]
-        y_sim[1, :, i] = d(T[1, :], p) + F(T[1, :], p, D_t) * x_sim[1, :, i] + v[1, :]
+        x_sim[1, :, i] = c(p, n_exp, delta_t) + G(p, n_exp, delta_t) * att_kf[n, :] + R(n_exp) * ω[1, :]
+        y_sim[1, :, i] = d(T[1, :], p) + F(T[1, :], p, X_t) * x_sim[1, :, i] + v[1, :]
 
         # Simulating future scenarios
         for t = 2:N
-            x_sim[t, :, i] = c(p, s, delta_t) + G(p, s, delta_t) * x_sim[t-1, :, i] + R(s) * ω[t, :]
-            y_sim[t, :, i] = d(T[t, :], p) + F(T[t, :], p, D_t) * x_sim[t, :, i] + v[t, :]
+            x_sim[t, :, i] = c(p, n_exp, delta_t) + G(p, n_exp, delta_t) * x_sim[t-1, :, i] + R(n_exp) * ω[t, :]
+            y_sim[t, :, i] = d(T[t, :], p) + F(T[t, :], p, X_t) * x_sim[t, :, i] + v[t, :]
         end
     end
 
@@ -40,11 +42,11 @@ function simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, N::I
 end
 
 """
-    simulate(p::SSParams, att_kf::Matrix{Float64}, T_V::Vector{Float64}, N::Int, S::Int; delta_t_v::Int = 1)
+    simulate(T_V::Matrix{Float64}, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t_v::Int = 1)
 
 Simulate S future scenarios up to N steps ahead. Vector of average time to maturity as input.
 """
-function simulate(p::SSParams, att_kf::Matrix{Float64}, T_V::Vector{Float64}, N::Int, S::Int; delta_t_v::Int = 1)
+function simulate(T_V::Vector{Float64}, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t_v::Int = 1)
     prods = length(T_V)
     T = Matrix{Float64}(undef, N, prods)
 
@@ -53,20 +55,22 @@ function simulate(p::SSParams, att_kf::Matrix{Float64}, T_V::Vector{Float64}, N:
         T[i, j] = T_V[j]
     end
 
-    x_sim, y_sim = simulate(p, att_kf, T, N, S; delta_t = delta_t_v)
+    x_sim, y_sim = simulate(T, N, S, p, f; delta_t = delta_t_v)
 end
 
 """
-    simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, dates::Vector{Int64}, s::Int64, N::Int, S::Int; delta_t::Int = 1)
+    simulate(T::Matrix{Float64}, X::VecOrMat, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t::Int = 1)
 
-Simulate S future scenarios up to N steps ahead. Matrix of time to maturity as input.
+Simulate S future scenarios up to N steps ahead. Matrix of time to maturity and exogenous variables as input.
 """
-function simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, dates::Vector{Int64}, s::Int64, N::Int, S::Int; delta_t::Int = 1)
+function simulate(T::Matrix{Float64}, X::VecOrMat, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t::Int = 1)
+    att_kf = f.att_kf
+
     n = size(att_kf, 1)
     prods = size(T, 2)
 
-    D = calc_D(s, dates)
-    s = size(D, 2)
+    X = X[:, :]
+    n_exp = size(X, 2)
 
     # Covariance matrices
     Q = W(p, delta_t)
@@ -77,7 +81,7 @@ function simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, date
     dist_v = MvNormal(zeros(prods), H)
 
     y_sim = Array{Float64, 3}(undef, N, prods, S)
-    x_sim = Array{Float64, 3}(undef, N, 2 + s, S)
+    x_sim = Array{Float64, 3}(undef, N, 2 + n_exp, S)
 
     for i in 1:S
 
@@ -85,13 +89,13 @@ function simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, date
         v = rand(dist_v, N)'
 
         # Initial values
-        x_sim[1, :, i] = c(p, s, delta_t) + G(p, s, delta_t) * att_kf[n, :] + R(s) * ω[1, :]
-        y_sim[1, :, i] = d(T[1, :], p) + F(T[1, :], p, D[1, :]) * x_sim[1, :, i] + v[1, :]
+        x_sim[1, :, i] = c(p, n_exp, delta_t) + G(p, n_exp, delta_t) * att_kf[n, :] + R(n_exp) * ω[1, :]
+        y_sim[1, :, i] = d(T[1, :], p) + F(T[1, :], p, X[1, :]) * x_sim[1, :, i] + v[1, :]
 
         # Simulating future scenarios
         for t = 2:N
-            x_sim[t, :, i] = c(p, s, delta_t) + G(p, s, delta_t) * x_sim[t-1, :, i] + R(s) * ω[t, :]
-            y_sim[t, :, i] = d(T[t, :], p) + F(T[t, :], p, D[t, :]) * x_sim[t, :, i] + v[t, :]
+            x_sim[t, :, i] = c(p, n_exp, delta_t) + G(p, n_exp, delta_t) * x_sim[t-1, :, i] + R(n_exp) * ω[t, :]
+            y_sim[t, :, i] = d(T[t, :], p) + F(T[t, :], p, X[t, :]) * x_sim[t, :, i] + v[t, :]
         end
     end
 
@@ -99,11 +103,11 @@ function simulate(p::SSParams, att_kf::Matrix{Float64}, T::Matrix{Float64}, date
 end
 
 """
-    simulate(p::SSParams, att_kf::Matrix{Float64}, T_V::Vector{Float64}, dates::Vector{Int64}, s::Int64, N::Int, S::Int; delta_t_v::Int = 1)
+    simulate(T_V::Matrix{Float64}, X::VecOrMat, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t_v::Int = 1)
 
-Simulate S future scenarios up to N steps ahead. Vector of average time to maturity as input.
+Simulate S future scenarios up to N steps ahead. Vector of average time to maturity and exogenous variables as input.
 """
-function simulate(p::SSParams, att_kf::Matrix{Float64}, T_V::Vector{Float64}, dates::Vector{Int64}, s::Int64, N::Int, S::Int; delta_t_v::Int = 1)
+function simulate(T_V::Vector{Float64}, X::VecOrMat, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t_v::Int = 1)
     prods = length(T_V)
     T = Matrix{Float64}(undef, N, prods)
 
@@ -112,5 +116,5 @@ function simulate(p::SSParams, att_kf::Matrix{Float64}, T_V::Vector{Float64}, da
         T[i, j] = T_V[j]
     end
 
-    x_sim, y_sim = simulate(p, att_kf, T, dates, s, N, S; delta_t = delta_t_v)
+    x_sim, y_sim = simulate(T, X, N, S, p, f; delta_t = delta_t_v)
 end

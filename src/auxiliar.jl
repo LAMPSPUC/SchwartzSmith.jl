@@ -29,6 +29,24 @@ function ensure_pos_sym!(M::AbstractArray{T}; ϵ::T = T(1e-8)) where T
 end
 
 """
+    gram_in_time(mat::Array{T, 3}) where T
+    gram(mat::AbstractArray{T}) where T
+
+Auxiliary functions for square root Kalman Filter, smoother and filtered states.    
+"""
+function gram_in_time(mat::Array{T, 3}) where T
+    gram_in_time = similar(mat)
+    @inbounds @views for t = 1:size(gram_in_time, 3)
+        gram_in_time[:, :, t] = gram(mat[:, :, t])
+    end
+    return gram_in_time
+end
+
+function gram(mat::AbstractArray{T}) where T
+    return mat*mat'
+end
+
+"""
     calc_seed(ln_F::Matrix{Typ}, n_seed::Int64) where Typ
 
 Random seed calculation for a time to maturity matrix.

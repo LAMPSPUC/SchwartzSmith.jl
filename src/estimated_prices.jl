@@ -1,29 +1,36 @@
 """
-    estimated_prices(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
+    estimated_prices(n::Int64, T::Matrix{Typ}, p::SSParams{Typ}; delta_t::Int = 1) where Typ
 
-Returns the prices and the kalman filter struct estimated by the model. Matrix of time to maturity as an input.
+Returns the prices estimated by the model, the Square Root Kalman Filter and smoother results. Matrix of time to maturity as an input.
 """
-function estimated_prices(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
-    n, prods = size(T)
-    y = Array{Typ, 2}(undef, n, prods)
-    D_t = Vector{Float64}(undef, 0)
+function estimated_prices(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, p::SSParams{Typ}; delta_t::Int = 1) where Typ
+    ln_F = ln_F[:, :]
 
-    f = kalman_filter(ln_F, T, p, delta_t)
-    smooth_state = smoother(ln_F, T, f, p, delta_t)
+    n, prods = size(ln_F)
+    y     = Array{Typ, 2}(undef, n, prods)
+    X_t   = Vector{Float64}(undef, 0)
+
+    sqrt_f          = sqrt_kalman_filter(ln_F, T, p, delta_t)
+    smoother        = sqrt_smoother(T, sqrt_f, p, delta_t)
+    filtered_states = sqrt_filtered_state(T, sqrt_f, p, delta_t)
 
     for t in 1:n
-        y[t, :] = d(T[t, :], p) + F(T[t, :], p, D_t) * smooth_state.alpha[t, :]
+        y[t, :] = d(T[t, :], p) + F(T[t, :], p, X_t) * smoother.alpha[t, :]
     end
 
-    return y, f, smooth_state
+    filter = Filter(sqrt_f, filtered_states.att_kf, filtered_states.Ptt_kf)
+
+    return y, filter, smoother
 end
 
 """
-    estimated_prices(p::SSParams{Typ}, T_V::Vector{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
+    estimated_prices(n::Int64, T_V::Vector{Typ}, p::SSParams{Typ}; delta_t::Int = 1) where Typ
 
-Returns the prices and the kalman filter struct estimated by the model. Vector of average time to maturity as an input.
+Returns the prices estimated by the model, the Square Root Kalman Filter and smoother results. Vector of time to maturity as an input.
 """
-function estimated_prices(p::SSParams{Typ}, T_V::Vector{Typ}, ln_F::Matrix{Typ}; delta_t::Int = 1) where Typ
+function estimated_prices(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}, p::SSParams{Typ}; delta_t::Int = 1) where Typ
+    ln_F = ln_F[:, :]
+
     n, prods = size(ln_F)
     T = Matrix{Typ}(undef, n, prods)
 
@@ -32,38 +39,44 @@ function estimated_prices(p::SSParams{Typ}, T_V::Vector{Typ}, ln_F::Matrix{Typ};
         T[i, j] = T_V[j]
     end
 
-    y, f, smooth_state = estimated_prices(p, T, ln_F; delta_t = delta_t)
+    y, filter, smoother = estimated_prices(ln_F, T, p; delta_t = delta_t)
 
-    return y, f, smooth_state
+    return y, filter, smoother
 end
 
 """
-    estimated_prices(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1) where Typ
+    estimated_prices(n::Int64, T::Matrix{Typ}, X::VecOrMat, p::SSParams{Typ}; delta_t::Int = 1) where Typ
 
-Returns the prices and the kalman filter struct estimated by the model. Matrix of time to maturity as an input.
+Returns the prices estimated by the model, the Square Root Kalman Filter and smoother results. Matrix of time to maturity and exogenous variables as input.
 """
-function estimated_prices(p::SSParams{Typ}, T::Matrix{Typ}, ln_F::Matrix{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1) where Typ
-    D = calc_D(s, dates)
+function estimated_prices(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat, p::SSParams{Typ}; delta_t::Int = 1) where Typ
+    ln_F = ln_F[:, :]
 
-    n, prods = size(T)
+    n, prods = size(ln_F)
     y = Array{Typ, 2}(undef, n, prods)
+    X = X[:,:]
 
-    f = kalman_filter(ln_F, T, D, p, delta_t)
-    smooth_state = smoother(ln_F, T, f, p, D, delta_t)
+    sqrt_f          = sqrt_kalman_filter(ln_F, T, X, p, delta_t)
+    smoother        = sqrt_smoother(T, X, sqrt_f, p, delta_t)
+    filtered_states = sqrt_filtered_state(T, X, sqrt_f, p, delta_t)
 
     for t in 1:n
-        y[t, :] = d(T[t, :], p) + F(T[t, :], p, D[t, :]) * smooth_state.alpha[t, :]
+        y[t, :] = d(T[t, :], p) + F(T[t, :], p, X[t, :]) * smoother.alpha[t, :]
     end
 
-    return y, f, smooth_state
+    filter = Filter(sqrt_f, filtered_states.att_kf, filtered_states.Ptt_kf)
+
+    return y, filter, smoother
 end
 
 """
-    estimated_prices(p::SSParams{Typ}, T_V::Vector{Typ}, ln_F::Matrix{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1) where Typ
+    estimated_prices(n::Int64, T_V::Vector{Typ}, X::VecOrMat, p::SSParams{Typ}; delta_t::Int = 1) where Typ
 
-Returns the prices and the kalman filter struct estimated by the model. Vector of average time to maturity as an input.
+Returns the prices estimated by the model, the Square Root Kalman Filter and smoother results. Vector of time to maturity and exogenous variables as input.
 """
-function estimated_prices(p::SSParams{Typ}, T_V::Vector{Typ}, ln_F::Matrix{Typ}, dates::Vector{Int64}, s::Int64; delta_t::Int = 1) where Typ
+function estimated_prices(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}, X::VecOrMat, p::SSParams{Typ}; delta_t::Int = 1) where Typ
+    ln_F = ln_F[:, :]
+
     n, prods = size(ln_F)
     T = Matrix{Typ}(undef, n, prods)
 
@@ -72,7 +85,7 @@ function estimated_prices(p::SSParams{Typ}, T_V::Vector{Typ}, ln_F::Matrix{Typ},
         T[i, j] = T_V[j]
     end
 
-    y, f, smooth_state = estimated_prices(p, T, ln_F, dates, s; delta_t = delta_t)
+    y, filter, smoother = estimated_prices(ln_F, T, X, p; delta_t = delta_t)
 
-    return y, f, smooth_state
+    return y, filter, smoother
 end
