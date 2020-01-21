@@ -20,8 +20,8 @@ pkg> add https://github.com/LAMPSPUC/SchwartzSmith.jl.git
 * Forecasting
 
 
-[build-img]: https://travis-ci.org/LAMPSPUC/SchwartzSmith.jl.svg?branch=master
-[build-url]: https://travis-ci.org/LAMPSPUC/SchwartzSmith.jl
+[build-img]: https://travis-ci.com/LAMPSPUC/SchwartzSmith.jl.svg?branch=master
+[build-url]: https://travis-ci.com/LAMPSPUC/SchwartzSmith.jl
 
 [codecov-img]: https://codecov.io/gh/LAMPSPUC/SchwartzSmith.jl/coverage.svg?branch=master
 [codecov-url]: https://codecov.io/gh/LAMPSPUC/SchwartzSmith.jl?branch=master
