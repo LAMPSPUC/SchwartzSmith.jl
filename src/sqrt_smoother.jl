@@ -1,9 +1,9 @@
 """
-    sqrt_smoother(T::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t::Int64) where Typ
+    sqrt_smoother(T::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t64) where Typ
 
 Square Root smoother without exogenous variables.
 """
-function sqrt_smoother(T::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t::Int64) where Typ
+function sqrt_smoother(T::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t64) where Typ
     X_t = Vector{Float64}(undef, 0)
     n_exp = 0
 
@@ -70,11 +70,11 @@ function sqrt_smoother(T::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::SSParam
 end
 
 """
-    sqrt_smoother(T::Matrix{Typ}, X::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t::Int64) where Typ
+    sqrt_smoother(T::Matrix{Typ}, X::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t64) where Typ
 
 Square Root smoother for when exogenous variables are included.
 """
-function sqrt_smoother(T::Matrix{Typ}, X::Matrix, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t::Int64) where Typ
+function sqrt_smoother(T::Matrix{Typ}, X::Matrix, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t64) where Typ
     n_exp = size(X, 2)
 
     # Dimensions data

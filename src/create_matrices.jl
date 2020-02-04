@@ -31,7 +31,7 @@ function V(p::SSParams)
     return cov_matrix
 end
 
-function W(p::SSParams, delta_t::Int)
+function W(p::SSParams, delta_t)
     ρ = (1 - exp(-p.k * delta_t)) * (p.ρ_ξχ * p.σ_χ * p.σ_ξ)/(p.k)
     cov_matrix = [
             (1 - exp(-2 * p.k * delta_t)) * (p.σ_χ^2)/(2 * p.k)     ρ
@@ -42,7 +42,7 @@ function W(p::SSParams, delta_t::Int)
     return cov_matrix
 end
 
-function G(p::SSParams, n_exp::Int64, delta_t::Int)
+function G(p::SSParams, n_exp::Int64, delta_t)
     G_aux = [exp(-p.k * delta_t)     0
         0                       1]
 
@@ -58,7 +58,7 @@ function G(p::SSParams, n_exp::Int64, delta_t::Int)
     end
 end
 
-function c(p::SSParams, n_exp::Int64, delta_t::Int)
+function c(p::SSParams, n_exp::Int64, delta_t)
     return [0; p.μ_ξ * delta_t; zeros(n_exp)]
 end
 

@@ -1,9 +1,9 @@
 """
-    sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delta_t::Int) where Typ
+    sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delta_t) where Typ
 
 Square Root Kalman Filter with a matrix of time to maturity as input.
 """
-function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delta_t::Int) where Typ
+function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delta_t) where Typ
     n, prods = size(ln_F)
     X_t = Vector{Float64}(undef, 0)
     n_exp = 0
@@ -65,11 +65,11 @@ function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, p::SSParams, delt
 end
 
 """
-    sqrt_kalman_filter(ln_F::Matrix{Typ}, T_V::Vector{Typ}, p::SSParams, delta_t::Int) where Typ
+    sqrt_kalman_filter(ln_F::Matrix{Typ}, T_V::Vector{Typ}, p::SSParams, delta_t) where Typ
 
 Square Root Kalman Filter with a vector of maturity as an input.
 """
-function sqrt_kalman_filter(ln_F::Matrix{Typ}, T_V::Vector{Typ}, p::SSParams, delta_t::Int) where Typ
+function sqrt_kalman_filter(ln_F::Matrix{Typ}, T_V::Vector{Typ}, p::SSParams, delta_t) where Typ
     n, prods = size(ln_F)
     T = Matrix{Typ}(undef, n, prods)
 
@@ -84,11 +84,11 @@ function sqrt_kalman_filter(ln_F::Matrix{Typ}, T_V::Vector{Typ}, p::SSParams, de
 end
 
 """
-    sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::VecOrMat, p::SSParams, delta_t::Int) where Typ
+    sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::VecOrMat, p::SSParams, delta_t) where Typ
 
 Square Root Kalman Filter with a matrix of time to maturity and exogenous variables as input.
 """
-function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::VecOrMat, p::SSParams, delta_t::Int) where Typ
+function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::VecOrMat, p::SSParams, delta_t) where Typ
     X = X[:, :]
 
     n, prods = size(ln_F)
@@ -151,11 +151,11 @@ function sqrt_kalman_filter(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::VecOrMat, p::S
 end
 
 """
-    sqrt_kalman_filter(ln_F::Matrix{Typ}, T_V::Vector{Typ}, X::VecOrMat, p::SSParams, delta_t::Int) where Typ
+    sqrt_kalman_filter(ln_F::Matrix{Typ}, T_V::Vector{Typ}, X::VecOrMat, p::SSParams, delta_t) where Typ
 
 Square Root Kalman Filter with a vector of time to maturity and exogenous variables as input.
 """
-function sqrt_kalman_filter(ln_F::Matrix{Typ}, T_V::Vector{Typ}, X::VecOrMat, p::SSParams, delta_t::Int) where Typ
+function sqrt_kalman_filter(ln_F::Matrix{Typ}, T_V::Vector{Typ}, X::VecOrMat, p::SSParams, delta_t) where Typ
     n, prods = size(ln_F)
     T = Matrix{Typ}(undef, n, prods)
 

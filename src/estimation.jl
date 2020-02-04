@@ -13,12 +13,12 @@ function calc_likelihood(v_kf::Matrix{Typ}, F_kf::Array{Typ, 3}, n::Int, prods::
 end
 
 """
-    compute_likelihood(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::Matrix, psi::Vector{Typ}, delta_t::Int) where Typ
+    compute_likelihood(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::Matrix, psi::Vector{Typ}, delta_t) where Typ
 
 Parameters definition and Square Root Kalman Filter execution to calculate the log likelihood. Function that will be optmized to obtain
 the best set of parameters.
 """
-function compute_likelihood(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::Matrix, psi::Vector{Typ}, delta_t::Int) where Typ
+function compute_likelihood(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::Matrix, psi::Vector{Typ}, delta_t) where Typ
 
     k = exp(psi[1])
     σ_χ = exp(psi[2])
