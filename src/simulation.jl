@@ -1,9 +1,9 @@
 """
-    simulate(T::Matrix{Float64}, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t::Int = 1)
+    simulate(T::Matrix{Float64}, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t = 1)
 
 Simulate S future scenarios up to N steps ahead. Matrix of time to maturity as input.
 """
-function simulate(T::Matrix{Float64}, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t::Int = 1)
+function simulate(T::Matrix{Float64}, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t = 1)
     att_kf = f.att_kf
 
     n = size(att_kf, 1)
@@ -59,11 +59,11 @@ function simulate(T_V::Vector{Float64}, N::Int, S::Int, p::SSParams, f::Filter{F
 end
 
 """
-    simulate(T::Matrix{Float64}, X::VecOrMat, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t::Int = 1)
+    simulate(T::Matrix{Float64}, X::VecOrMat, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t = 1)
 
 Simulate S future scenarios up to N steps ahead. Matrix of time to maturity and exogenous variables as input.
 """
-function simulate(T::Matrix{Float64}, X::VecOrMat, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t::Int = 1)
+function simulate(T::Matrix{Float64}, X::VecOrMat, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t = 1)
     att_kf = f.att_kf
 
     n = size(att_kf, 1)

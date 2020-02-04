@@ -17,11 +17,11 @@ include("forecast.jl")
 include("simulation.jl")
 
 """
-    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
 Estimation of the Schwartz Smith model with a matrix of time to maturity as an input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
     ln_F = ln_F[:, :]
 
     # Alocate memory
@@ -71,11 +71,11 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}; delta_t::Int = 1, se
 end
 
 """
-    schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
 Estimation of the Schwartz Smith model with a vector of time to maturity as an input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
     ln_F = ln_F[:, :]
 
     # Parameters estimation
@@ -93,11 +93,11 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}; delta_t::Int = 1, 
 end
 
 """
-    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
 Estimation of the Schwartz Smith model with a matrix of time to maturity and exogenous variables as input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
     ln_F = ln_F[:, :]
 
     # Alocate memory
@@ -111,8 +111,11 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t
     @assert size(seeds, 1) == n_psi
     loglikelihood = Vector{Typ}(undef, n_seeds)
     psitilde      = Matrix{Typ}(undef, n_psi, n_seeds)
-    optseeds      = Vector{Optim.OptimizationResults}(undef, n_seeds)
+    #optseeds      = Vector{Optim.OptimizationResults}(undef, n_seeds)
+    optseeds      = Vector{Optim.OptimizationResults}(undef, 0)
 
+    @show n_seeds
+    @show n_psi
     # Optimization
     for i in 1:n_seeds
         try
@@ -122,16 +125,28 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t
             # allocate log_lik and minimizer
             loglikelihood[i] = -optseed.minimum
             psitilde[:, i] = optseed.minimizer
-            optseeds[i] = optseed
+            #optseeds[i] = optseed
+            push!(optseeds, optseed)
+            @show -optseed.minimum
+            @show optseed.minimizer
+            @show optseed
         catch err
             println(err)
         end
     end
 
+    @show loglikelihood
+    @show psitilde
+    @show optseeds
+
     # Query results
     log_lik, best_seed = findmax(loglikelihood)
 
     opt_param = psitilde[:, best_seed]
+
+    @show log_lik
+    @show best_seed
+    @show opt_param
 
     # Results
     k = exp(opt_param[1])
@@ -144,15 +159,19 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t
     s = exp.(opt_param[8:end])
     p = SSParams(k, sigma_chi, lambda_chi, mi_xi, sigma_xi, mi_xi_star, rho_xi_chi, s)
 
+    @show p
+    @show seeds[:, best_seed]
+    @show optseeds[best_seed]
+
     return p, seeds[:, best_seed], optseeds[best_seed]
 end
 
 """
-    schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}, X::VecOrMat; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}, X::VecOrMat; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
 Estimation of the Schwartz Smith model with a vector of time to maturity and exogenous variables as input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}, X::VecOrMat; delta_t::Int = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}, X::VecOrMat; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
     ln_F = ln_F[:, :]
 
     # Parameters estimation
