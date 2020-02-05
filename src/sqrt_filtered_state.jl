@@ -1,9 +1,9 @@
 """
-    sqrt_filtered_state(T::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t64) where Typ
+    sqrt_filtered_state(T::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t) where Typ
 
 Filtered states resulted from the square root Kalman Filter.
 """
-function sqrt_filtered_state(T::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t64) where Typ
+function sqrt_filtered_state(T::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t) where Typ
     X_t = Vector{Float64}(undef, 0)
     n_exp = 0
 
@@ -37,11 +37,11 @@ function sqrt_filtered_state(T::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::S
 end
 
 """
-    sqrt_filtered_state(T::Matrix{Typ}, X::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t64) where Typ
+    sqrt_filtered_state(T::Matrix{Typ}, X::Matrix{Typ}, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t) where Typ
 
 Filtered state resulted from the square root Kalman Filter when exogenous variables are included.
 """
-function sqrt_filtered_state(T::Matrix{Typ}, X::Matrix, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t64) where Typ
+function sqrt_filtered_state(T::Matrix{Typ}, X::Matrix, sqrt_f::SquareRootFilter{Typ}, p::SSParams{Typ}, delta_t) where Typ
     X = X[:, :]
     n_exp = size(X, 2)
 
