@@ -17,11 +17,11 @@ include("forecast.jl")
 include("simulation.jl")
 
 """
-    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}; delta_t, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
 Estimation of the Schwartz Smith model with a matrix of time to maturity as an input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}; delta_t, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
     ln_F = ln_F[:, :]
 
     # Alocate memory
@@ -79,11 +79,11 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}; delta_t = 1, seeds::
 end
 
 """
-    schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}; delta_t, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
 Estimation of the Schwartz Smith model with a vector of time to maturity as an input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}; delta_t, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
     ln_F = ln_F[:, :]
 
     # Parameters estimation
@@ -101,11 +101,11 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}; delta_t = 1, seeds
 end
 
 """
-    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    schwartzsmith(ln_F::Matrix{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
 Estimation of the Schwartz Smith model with a matrix of time to maturity and exogenous variables as input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
     ln_F = ln_F[:, :]
 
     # Alocate memory
@@ -164,11 +164,11 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t
 end
 
 """
-    schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}, X::VecOrMat; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+    schwartzsmith(ln_F::Matrix{Typ}, T_V::Vector{Typ}, X::VecOrMat; delta_t, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
 
 Estimation of the Schwartz Smith model with a vector of time to maturity and exogenous variables as input. Returns the estimated parameters.
 """
-function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}, X::VecOrMat; delta_t = 1, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
+function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}, X::VecOrMat; delta_t, seeds::VecOrMat{Typ} = calc_seed(ln_F, 10)) where Typ
     ln_F = ln_F[:, :]
 
     # Parameters estimation
