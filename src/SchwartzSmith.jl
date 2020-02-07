@@ -36,6 +36,8 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}; delta_t = 1, seeds::
     psitilde_temp = Vector{Vector{Float64}}(undef, 0)
     optseeds      = Vector{Optim.OptimizationResults}(undef, 0)
 
+    all_loglik = Vector{Float64}(undef, 0)
+
     # Optimization
     for i in 1:n_seeds
         try
@@ -45,12 +47,14 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}; delta_t = 1, seeds::
             push!(loglikelihood, -optseed.minimum)
             push!(psitilde_temp, optseed.minimizer)
             push!(optseeds, optseed)
+            push!(all_loglik, -optseed.minimum)
         catch err
             println(err)
         end
     end
 
     psitilde = Matrix{Typ}(undef, n_psi, length(psitilde_temp))
+
     for i in 1:length(psitilde_temp)
         psitilde[:, i] = psitilde_temp[i]
     end
@@ -70,8 +74,8 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}; delta_t = 1, seeds::
     rho_xi_chi = -1 + 2/(1 + exp(-opt_param[7]))
     s = exp.(opt_param[8:end])
     p = SSParams(k, sigma_chi, lambda_chi, mi_xi, sigma_xi, mi_xi_star, rho_xi_chi, s)
-    
-    return p, seeds[:, best_seed], optseeds[best_seed]
+
+    return p, seeds[:, best_seed], optseeds[best_seed], psitilde, all_loglik
 end
 
 """
@@ -91,9 +95,9 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}; delta_t = 1, seeds
         T[i, j] = T_V[j]
     end
 
-    p, seed, optseeds = schwartzsmith(ln_F, T; delta_t = delta_t, seeds = seeds)
+    p, seed, optseeds, psitilde, all_loglik = schwartzsmith(ln_F, T; delta_t = delta_t, seeds = seeds)
 
-    return p, seed, optseeds
+    return p, seed, optseeds, psitilde, all_loglik
 end
 
 """
@@ -117,6 +121,8 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t
     psitilde_temp = Vector{Vector{Float64}}(undef, 0)
     optseeds      = Vector{Optim.OptimizationResults}(undef, 0)
 
+    all_loglik = Vector{Float64}(undef, 0)
+
     # Optimization
     for i in 1:n_seeds
         try
@@ -126,12 +132,14 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t
             push!(loglikelihood, -optseed.minimum)
             push!(psitilde_temp, optseed.minimizer)
             push!(optseeds, optseed)
+            push!(all_loglik, -optseed.minimum)
         catch err
             println(err)
         end
     end
 
     psitilde = Matrix{Typ}(undef, n_psi, length(psitilde_temp))
+
     for i in 1:length(psitilde_temp)
         psitilde[:, i] = psitilde_temp[i]
     end
@@ -152,7 +160,7 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t
     s = exp.(opt_param[8:end])
     p = SSParams(k, sigma_chi, lambda_chi, mi_xi, sigma_xi, mi_xi_star, rho_xi_chi, s)
 
-    return p, seeds[:, best_seed], optseeds[best_seed]
+    return p, seeds[:, best_seed], optseeds[best_seed], psitilde, all_loglik
 end
 
 """
@@ -172,9 +180,9 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}, X::VecOrMat; delta
         T[i, j] = T_V[j]
     end
 
-    p, seed, optseeds = schwartzsmith(ln_F, T, X; delta_t = delta_t, seeds = seeds)
+    p, seed, optseeds, psitilde, all_loglik = schwartzsmith(ln_F, T, X; delta_t = delta_t, seeds = seeds)
 
-    return p, seed, optseeds
+    return p, seed, optseeds, psitilde, all_loglik
 end
 
 
