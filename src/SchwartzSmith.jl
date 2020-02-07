@@ -32,9 +32,9 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}; delta_t = 1, seeds::
     n_psi         = 7 + prods
     n_seeds       = size(seeds, 2)
     @assert size(seeds, 1) == n_psi
-    loglikelihood = Vector{Typ}(undef, n_seeds)
-    psitilde      = Matrix{Typ}(undef, n_psi, n_seeds)
-    optseeds      = Vector{Optim.OptimizationResults}(undef, n_seeds)
+    loglikelihood = Vector{Typ}(undef, 0)
+    psitilde_temp = Vector{Vector{Float64}}(undef, 0)
+    optseeds      = Vector{Optim.OptimizationResults}(undef, 0)
 
     # Optimization
     for i in 1:n_seeds
@@ -42,13 +42,17 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}; delta_t = 1, seeds::
             println("-------------------- Seed ", i, "--------------------")
             # optimize
             optseed = optimize(psi -> compute_likelihood(ln_F, T, X, psi, delta_t), seeds[:, i], LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
-            # allocate log_lik and minimizer
-            loglikelihood[i] = -optseed.minimum
-            psitilde[:, i] = optseed.minimizer
-            optseeds[i] = optseed
+            push!(loglikelihood, -optseed.minimum)
+            push!(psitilde_temp, optseed.minimizer)
+            push!(optseeds, optseed)
         catch err
             println(err)
         end
+    end
+
+    psitilde = Matrix{Typ}(undef, n_psi, length(psitilde_temp))
+    for i in 1:length(psitilde_temp)
+        psitilde[:, i] = psitilde_temp[i]
     end
 
     # Query results
@@ -66,7 +70,7 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}; delta_t = 1, seeds::
     rho_xi_chi = -1 + 2/(1 + exp(-opt_param[7]))
     s = exp.(opt_param[8:end])
     p = SSParams(k, sigma_chi, lambda_chi, mi_xi, sigma_xi, mi_xi_star, rho_xi_chi, s)
-
+    
     return p, seeds[:, best_seed], optseeds[best_seed]
 end
 
@@ -109,44 +113,33 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t
     n_psi         = 7 + prods
     n_seeds       = size(seeds, 2)
     @assert size(seeds, 1) == n_psi
-    loglikelihood = Vector{Typ}(undef, n_seeds)
-    psitilde      = Matrix{Typ}(undef, n_psi, n_seeds)
-    #optseeds      = Vector{Optim.OptimizationResults}(undef, n_seeds)
+    loglikelihood = Vector{Typ}(undef, 0)
+    psitilde_temp = Vector{Vector{Float64}}(undef, 0)
     optseeds      = Vector{Optim.OptimizationResults}(undef, 0)
 
-    @show n_seeds
-    @show n_psi
     # Optimization
     for i in 1:n_seeds
         try
             println("-------------------- Seed ", i, "--------------------")
             # optimize
             optseed = optimize(psi -> compute_likelihood(ln_F, T, X, psi, delta_t), seeds[:, i], LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-6, show_trace = true))
-            # allocate log_lik and minimizer
-            loglikelihood[i] = -optseed.minimum
-            psitilde[:, i] = optseed.minimizer
-            #optseeds[i] = optseed
+            push!(loglikelihood, -optseed.minimum)
+            push!(psitilde_temp, optseed.minimizer)
             push!(optseeds, optseed)
-            @show -optseed.minimum
-            @show optseed.minimizer
-            @show optseed
         catch err
             println(err)
         end
     end
 
-    @show loglikelihood
-    @show psitilde
-    @show optseeds
+    psitilde = Matrix{Typ}(undef, n_psi, length(psitilde_temp))
+    for i in 1:length(psitilde_temp)
+        psitilde[:, i] = psitilde_temp[i]
+    end
 
     # Query results
     log_lik, best_seed = findmax(loglikelihood)
 
     opt_param = psitilde[:, best_seed]
-
-    @show log_lik
-    @show best_seed
-    @show opt_param
 
     # Results
     k = exp(opt_param[1])
@@ -158,10 +151,6 @@ function schwartzsmith(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat; delta_t
     rho_xi_chi = -1 + 2/(1 + exp(-opt_param[7]))
     s = exp.(opt_param[8:end])
     p = SSParams(k, sigma_chi, lambda_chi, mi_xi, sigma_xi, mi_xi_star, rho_xi_chi, s)
-
-    @show p
-    @show seeds[:, best_seed]
-    @show optseeds[best_seed]
 
     return p, seeds[:, best_seed], optseeds[best_seed]
 end
