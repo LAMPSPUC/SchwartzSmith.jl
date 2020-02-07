@@ -3,7 +3,7 @@
 
 Returns the forecasts N steps ahead. Matrix of time to maturity as an input.
 """
-function forecast(T::Matrix{Typ}, N::Int, p::SSParams{Typ}, f::Filter{Typ}; delta_t) where Typ
+function forecast(T::Matrix{Typ}, N::Int, p::SSParams{Typ}, f::Filter{Typ}; delta_t = 1) where Typ
     prods = size(T, 2)
     X_t = Vector{Float64}(undef, 0)
     n_exp = 0
@@ -71,7 +71,7 @@ end
 
 Returns the forecasts N steps ahead. Matrix of time to maturity and exogenous variables as input.
 """
-function forecast(T::Matrix{Typ}, X::VecOrMat, N::Int, p::SSParams{Typ}, f::Filter{Typ}; delta_t) where Typ
+function forecast(T::Matrix{Typ}, X::VecOrMat, N::Int, p::SSParams{Typ}, f::Filter{Typ}; delta_t = 1) where Typ
     prods = size(T, 2)
 
     X = X[:,:]

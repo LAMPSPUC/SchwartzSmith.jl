@@ -3,7 +3,7 @@
 
 Simulate S future scenarios up to N steps ahead. Matrix of time to maturity as input.
 """
-function simulate(T::Matrix{Float64}, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t)
+function simulate(T::Matrix{Float64}, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t = 1)
     att_kf = f.att_kf
 
     n = size(att_kf, 1)
@@ -63,7 +63,7 @@ end
 
 Simulate S future scenarios up to N steps ahead. Matrix of time to maturity and exogenous variables as input.
 """
-function simulate(T::Matrix{Float64}, X::VecOrMat, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t)
+function simulate(T::Matrix{Float64}, X::VecOrMat, N::Int, S::Int, p::SSParams, f::Filter{Float64}; delta_t = 1)
     att_kf = f.att_kf
 
     n = size(att_kf, 1)

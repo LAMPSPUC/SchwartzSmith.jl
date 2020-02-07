@@ -3,7 +3,7 @@
 
 Returns the prices estimated by the model, the Square Root Kalman Filter and smoother results. Matrix of time to maturity as an input.
 """
-function estimated_prices(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, p::SSParams{Typ}; delta_t) where Typ
+function estimated_prices(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, p::SSParams{Typ}; delta_t = 1) where Typ
     ln_F = ln_F[:, :]
 
     n, prods = size(ln_F)
@@ -28,7 +28,7 @@ end
 
 Returns the prices estimated by the model, the Square Root Kalman Filter and smoother results. Vector of time to maturity as an input.
 """
-function estimated_prices(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}, p::SSParams{Typ}; delta_t) where Typ
+function estimated_prices(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}, p::SSParams{Typ}; delta_t = 1) where Typ
     ln_F = ln_F[:, :]
 
     n, prods = size(ln_F)
@@ -49,7 +49,7 @@ end
 
 Returns the prices estimated by the model, the Square Root Kalman Filter and smoother results. Matrix of time to maturity and exogenous variables as input.
 """
-function estimated_prices(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat, p::SSParams{Typ}; delta_t) where Typ
+function estimated_prices(ln_F::VecOrMat{Typ}, T::Matrix{Typ}, X::VecOrMat, p::SSParams{Typ}; delta_t = 1) where Typ
     ln_F = ln_F[:, :]
 
     n, prods = size(ln_F)
@@ -74,7 +74,7 @@ end
 
 Returns the prices estimated by the model, the Square Root Kalman Filter and smoother results. Vector of time to maturity and exogenous variables as input.
 """
-function estimated_prices(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}, X::VecOrMat, p::SSParams{Typ}; delta_t) where Typ
+function estimated_prices(ln_F::VecOrMat{Typ}, T_V::Vector{Typ}, X::VecOrMat, p::SSParams{Typ}; delta_t = 1) where Typ
     ln_F = ln_F[:, :]
 
     n, prods = size(ln_F)
